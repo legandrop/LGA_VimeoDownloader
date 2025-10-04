@@ -123,3 +123,20 @@ When testing on Windows, verify:
 - Error handling includes both network and file system errors
 - Progress reporting keeps user informed during downloads
 - All Windows-specific code is wrapped in `#ifdef Q_OS_WIN` blocks
+
+## YouTube Support Requirements
+
+### Why ffmpeg is Required for YouTube
+
+YouTube videos often come in separate audio and video streams that need to be merged:
+- **Video Stream**: Contains video without audio
+- **Audio Stream**: Contains audio without video
+- **ffmpeg**: Merges these streams into a single playable file
+
+### Platform-Specific YouTube Support
+
+| Platform | yt-dlp | ffmpeg | YouTube Support |
+|----------|--------|--------|-----------------|
+| macOS | ✅ Auto | ✅ Auto | ✅ Full |
+| Windows | ✅ Auto | ❌ Manual | ⚠️ Partial |
+| Linux | ❌ Manual | ❌ Manual | ⚠️ Manual |

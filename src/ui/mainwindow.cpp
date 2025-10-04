@@ -1,6 +1,7 @@
 #include "vimeodownloader/mainwindow.h"
 #include "vimeodownloader/downloader.h"
 #include "vimeodownloader/colorutils.h"
+#include "vimeodownloader/toolsmanager.h"
 
 #include <QApplication>
 #include <QVBoxLayout>
@@ -49,15 +50,15 @@ MainWindow::MainWindow(QWidget *parent)
     , m_settingsLayout(nullptr)
     , m_credentialsLayout(nullptr)
     , m_folderLayout(nullptr)
-    , m_ytDlpLayout(nullptr)
+    , m_toolsLayout(nullptr)
     , m_userInput(nullptr)
     , m_passwordInput(nullptr)
     , m_saveCredentialsButton(nullptr)
     , m_downloadFolderInput(nullptr)
     , m_browseFolderButton(nullptr)
-    , m_ytDlpButton(nullptr)
+    , m_toolsButton(nullptr)
     , m_settings(nullptr)
-    , m_ytDlpInstalled(false)
+    , m_toolsManager(nullptr)
 {
     // Inicializar configuración
     m_settings = new QSettings(getConfigPath(), QSettings::IniFormat, this);
@@ -67,7 +68,11 @@ MainWindow::MainWindow(QWidget *parent)
     setupConnections();
     loadSettings();
     detectOperatingSystem();
-    checkYtDlpInstallation();
+    
+    // Initialize tools manager
+    m_toolsManager = new ToolsManager(m_logOutput, m_toolsButton, this);
+    connect(m_toolsManager, &ToolsManager::toolsStatusChanged, this, &MainWindow::onToolsStatusChanged);
+    m_toolsManager->checkToolsInstallation();
     
     // Configurar ventana
     setWindowTitle("Vimeo Downloader - LGA");
@@ -102,7 +107,7 @@ void MainWindow::setupUI()
     // Layout horizontal para URL y botón
     m_urlLayout = new QHBoxLayout();
     m_urlInput = new QLineEdit(this);
-    m_urlInput->setPlaceholderText("https://vimeo.com/...");
+    m_urlInput->setPlaceholderText("https://vimeo.com/... or https://youtube.com/...");
     
     m_downloadButton = new QPushButton("Download", this);
     m_downloadButton->setObjectName("downloadButton");
@@ -169,18 +174,18 @@ void MainWindow::setupUI()
     m_folderLayout->addWidget(m_downloadFolderInput);
     m_folderLayout->addWidget(m_browseFolderButton);
     
-    // Third row: yt-dlp button aligned right
-    m_ytDlpLayout = new QHBoxLayout();
-    m_ytDlpButton = new QPushButton("Checking yt-dlp...", this);
-    m_ytDlpButton->setEnabled(false);
-    m_ytDlpButton->setFixedWidth(120);
+    // Third row: tools button aligned right
+    m_toolsLayout = new QHBoxLayout();
+    m_toolsButton = new QPushButton("Checking Tools...", this);
+    m_toolsButton->setEnabled(false);
+    m_toolsButton->setFixedWidth(120);
     
-    m_ytDlpLayout->addStretch(); // Push button to the right
-    m_ytDlpLayout->addWidget(m_ytDlpButton);
+    m_toolsLayout->addStretch(); // Push button to the right
+    m_toolsLayout->addWidget(m_toolsButton);
     
     m_settingsLayout->addLayout(m_credentialsLayout);
     m_settingsLayout->addLayout(m_folderLayout);
-    m_settingsLayout->addLayout(m_ytDlpLayout);
+    m_settingsLayout->addLayout(m_toolsLayout);
     
     // Agregar todos los grupos al layout principal
     m_mainLayout->addWidget(m_inputGroup);
@@ -204,8 +209,8 @@ void MainWindow::setupStyles()
     style()->unpolish(m_browseFolderButton);
     style()->polish(m_browseFolderButton);
     
-    style()->unpolish(m_ytDlpButton);
-    style()->polish(m_ytDlpButton);
+    style()->unpolish(m_toolsButton);
+    style()->polish(m_toolsButton);
 }
 
 void MainWindow::setupConnections()
@@ -213,7 +218,6 @@ void MainWindow::setupConnections()
     // Connect UI signals
     connect(m_urlInput, &QLineEdit::textChanged, this, &MainWindow::onUrlChanged);
     connect(m_downloadButton, &QPushButton::clicked, this, &MainWindow::onDownloadClicked);
-    connect(m_ytDlpButton, &QPushButton::clicked, this, &MainWindow::onInstallUpdateYtDlpClicked);
     connect(m_saveCredentialsButton, &QPushButton::clicked, this, &MainWindow::onSaveCredentialsClicked);
     connect(m_browseFolderButton, &QPushButton::clicked, this, &MainWindow::onBrowseFolderClicked);
 }
@@ -240,14 +244,14 @@ void MainWindow::onDownloadClicked()
         return;
     }
     
-    // Validate Vimeo URL
-    if (!url.contains("vimeo.com", Qt::CaseInsensitive)) {
-        QMessageBox::warning(this, "Error", "Please enter a valid Vimeo URL.");
+    // Validate video URL (Vimeo or YouTube)
+    if (!isValidVideoUrl(url)) {
+        QMessageBox::warning(this, "Error", "Please enter a valid Vimeo or YouTube URL.");
         return;
     }
     
-    if (!m_ytDlpInstalled) {
-        QMessageBox::warning(this, "Error", "yt-dlp is not installed. Please install it first.");
+    if (!m_toolsManager->areToolsInstalled()) {
+        QMessageBox::warning(this, "Error", "Required tools are not installed. Please install them first.");
         return;
     }
     
@@ -344,137 +348,17 @@ void MainWindow::onUrlChanged()
     QString password = m_settings->value("vimeo/password", "").toString();
     QString downloadDir = m_settings->value("download/folder", "").toString();
     
-    bool isValidUrl = !url.isEmpty() && url.contains("vimeo.com", Qt::CaseInsensitive);
+    bool isValidUrl = !url.isEmpty() && isValidVideoUrl(url);
     bool hasCredentials = !user.isEmpty() && !password.isEmpty();
     bool hasDownloadDir = !downloadDir.isEmpty();
     
-    m_downloadButton->setEnabled(isValidUrl && hasCredentials && hasDownloadDir && m_ytDlpInstalled);
+    m_downloadButton->setEnabled(isValidUrl && hasCredentials && hasDownloadDir && m_toolsManager->areToolsInstalled());
 }
 
-void MainWindow::onInstallUpdateYtDlpClicked()
+void MainWindow::onToolsStatusChanged(bool allInstalled)
 {
-    m_ytDlpButton->setEnabled(false);
-    
-#ifdef Q_OS_WIN
-    // Windows: Download yt-dlp.exe from GitHub
-    if (m_ytDlpInstalled) {
-        m_logOutput->append("=== Updating yt-dlp ===");
-        m_logOutput->append("Downloading latest yt-dlp.exe from GitHub...");
-    } else {
-        m_logOutput->append("=== Installing yt-dlp ===");
-        m_logOutput->append("Downloading yt-dlp.exe from GitHub...");
-    }
-    downloadYtDlpWindows();
-    return;
-#endif
-    
-    if (m_ytDlpInstalled) {
-        // Update yt-dlp
-#ifdef Q_OS_MAC
-        m_logOutput->append("=== Updating yt-dlp ===");
-        
-        QProcess *process = new QProcess(this);
-        
-        // Connect process signals
-        connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-            QByteArray data = process->readAllStandardOutput();
-            QString output = QString::fromUtf8(data).trimmed();
-            if (!output.isEmpty()) {
-                m_logOutput->append(output);
-            }
-        });
-        
-        connect(process, &QProcess::readyReadStandardError, [this, process]() {
-            QByteArray data = process->readAllStandardError();
-            QString output = QString::fromUtf8(data).trimmed();
-            if (!output.isEmpty()) {
-                m_logOutput->append("INFO: " + output);
-            }
-        });
-        
-        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-            
-            if (exitStatus == QProcess::CrashExit || exitCode != 0) {
-                m_logOutput->append("ERROR: Failed to update yt-dlp");
-                m_logOutput->append("Try updating manually: brew upgrade yt-dlp");
-            } else {
-                m_logOutput->append("=== yt-dlp updated successfully ===");
-            }
-            
-            // Check installation after process
-            QTimer::singleShot(1000, [this]() {
-                checkYtDlpInstallation();
-            });
-            
-            process->deleteLater();
-        });
-        
-        m_logOutput->append("Executing: brew upgrade yt-dlp");
-        process->start("brew", QStringList() << "upgrade" << "yt-dlp");
-        
-        if (!process->waitForStarted(5000)) {
-            m_logOutput->append("ERROR: Could not execute brew upgrade");
-            m_logOutput->append("Make sure Homebrew is installed and in PATH");
-            m_ytDlpButton->setEnabled(true);
-            process->deleteLater();
-        }
-#endif
-    } else {
-        // Install yt-dlp
-#ifdef Q_OS_MAC
-        m_logOutput->append("=== Installing yt-dlp ===");
-        
-        QProcess *process = new QProcess(this);
-        
-        // Connect process signals
-        connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-            QByteArray data = process->readAllStandardOutput();
-            QString output = QString::fromUtf8(data).trimmed();
-            if (!output.isEmpty()) {
-                m_logOutput->append(output);
-            }
-        });
-        
-        connect(process, &QProcess::readyReadStandardError, [this, process]() {
-            QByteArray data = process->readAllStandardError();
-            QString output = QString::fromUtf8(data).trimmed();
-            if (!output.isEmpty()) {
-                m_logOutput->append("INFO: " + output);
-            }
-        });
-        
-        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-            
-            if (exitStatus == QProcess::CrashExit || exitCode != 0) {
-                m_logOutput->append("ERROR: Failed to install yt-dlp");
-                m_logOutput->append("Try installing manually: brew install yt-dlp");
-                m_logOutput->append("Make sure Homebrew is installed first");
-            } else {
-                m_logOutput->append("=== yt-dlp installed successfully ===");
-            }
-            
-            // Check installation after process
-            QTimer::singleShot(1000, [this]() {
-                checkYtDlpInstallation();
-            });
-            
-            process->deleteLater();
-        });
-        
-        m_logOutput->append("Executing: brew install yt-dlp");
-        process->start("brew", QStringList() << "install" << "yt-dlp");
-        
-        if (!process->waitForStarted(5000)) {
-            m_logOutput->append("ERROR: Could not execute brew install");
-            m_logOutput->append("Make sure Homebrew is installed and in PATH");
-            m_logOutput->append("Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"");
-            m_ytDlpButton->setEnabled(true);
-            process->deleteLater();
-        }
-#endif
-    }
+    // Update download button state when tools status changes
+    onUrlChanged();
 }
 
 void MainWindow::onSaveCredentialsClicked()
@@ -532,77 +416,24 @@ void MainWindow::loadSettings()
     }
 }
 
-void MainWindow::checkYtDlpInstallation()
+bool MainWindow::isValidVideoUrl(const QString &url) const
 {
-    m_logOutput->append("Checking yt-dlp installation...");
-    
-#ifdef Q_OS_WIN
-    // Windows: Check if yt-dlp.exe exists in the same directory as the executable
-    QString appDir = QCoreApplication::applicationDirPath();
-    QString ytDlpPath = appDir + "/yt-dlp.exe";
-    
-    if (QFile::exists(ytDlpPath)) {
-        m_ytDlpInstalled = true;
-        m_ytDlpButton->setText("Update yt-dlp");
-        m_ytDlpButton->setProperty("class", "");
-        style()->unpolish(m_ytDlpButton);
-        style()->polish(m_ytDlpButton);
-        m_ytDlpButton->setEnabled(true);
-        m_logOutput->append("✓ yt-dlp.exe found in application directory");
-    } else {
-        m_ytDlpInstalled = false;
-        m_ytDlpButton->setText("Install yt-dlp");
-        m_ytDlpButton->setProperty("class", "danger");
-        style()->unpolish(m_ytDlpButton);
-        style()->polish(m_ytDlpButton);
-        m_ytDlpButton->setEnabled(true);
-        m_logOutput->append("✗ yt-dlp.exe not found in application directory");
+    if (url.isEmpty()) {
+        return false;
     }
-    onUrlChanged();
-    return;
-#endif
     
-    QProcess *process = new QProcess(this);
-    
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-        
-        if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-            m_ytDlpInstalled = true;
-            m_ytDlpButton->setText("Update yt-dlp");
-            m_ytDlpButton->setProperty("class", "");
-            style()->unpolish(m_ytDlpButton);
-            style()->polish(m_ytDlpButton);
-            m_ytDlpButton->setEnabled(true);
-            m_logOutput->append("✓ yt-dlp is installed and available");
-        } else {
-            m_ytDlpInstalled = false;
-            m_ytDlpButton->setText("Install yt-dlp");
-            m_ytDlpButton->setProperty("class", "danger");
-            style()->unpolish(m_ytDlpButton);
-            style()->polish(m_ytDlpButton);
-            m_ytDlpButton->setEnabled(true);
-            m_logOutput->append("✗ yt-dlp is not installed");
-        }
-        
-        onUrlChanged(); // Update download button state
-        process->deleteLater();
-    });
-    
-    // Check if yt-dlp is available
-    process->start("yt-dlp", QStringList() << "--version");
-    
-    if (!process->waitForStarted(3000)) {
-        m_ytDlpInstalled = false;
-        m_ytDlpButton->setText("Install yt-dlp");
-        m_ytDlpButton->setProperty("class", "danger");
-        style()->unpolish(m_ytDlpButton);
-        style()->polish(m_ytDlpButton);
-        m_ytDlpButton->setEnabled(true);
-        m_logOutput->append("✗ yt-dlp is not installed");
-        onUrlChanged();
-        process->deleteLater();
+    // Check for Vimeo URLs
+    if (url.contains("vimeo.com", Qt::CaseInsensitive)) {
+        return true;
     }
+    
+    // Check for YouTube URLs
+    if (url.contains("youtube.com", Qt::CaseInsensitive) || 
+        url.contains("youtu.be", Qt::CaseInsensitive)) {
+        return true;
+    }
+    
+    return false;
 }
 
 QString MainWindow::getConfigPath() const
@@ -639,90 +470,25 @@ void MainWindow::detectOperatingSystem()
 #ifdef Q_OS_MAC
     m_logOutput->append("=== System Information ===");
     m_logOutput->append("Operating System: macOS");
-    m_logOutput->append("yt-dlp installation method: brew");
+    m_logOutput->append("Tools installation method: brew");
+    m_logOutput->append("Supported platforms: Vimeo, YouTube");
     m_logOutput->append("===========================");
 #elif defined(Q_OS_WIN)
     m_logOutput->append("=== System Information ===");
     m_logOutput->append("Operating System: Windows");
-    m_logOutput->append("yt-dlp installation method: Download from GitHub");
-    m_logOutput->append("yt-dlp location: Application directory");
+    m_logOutput->append("Tools installation method: Download from GitHub");
+    m_logOutput->append("Tools location: Application directory");
+    m_logOutput->append("Supported platforms: Vimeo, YouTube");
     m_logOutput->append("===========================");
 #else
     m_logOutput->append("=== System Information ===");
     m_logOutput->append("Operating System: Linux/Other");
-    m_logOutput->append("yt-dlp installation: Not implemented yet");
+    m_logOutput->append("Tools installation: Manual installation required");
+    m_logOutput->append("Supported platforms: Vimeo, YouTube");
     m_logOutput->append("===========================");
 #endif
 }
 
-void MainWindow::downloadYtDlpWindows()
-{
-#ifdef Q_OS_WIN
-    // Create network manager
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    
-    // GitHub URL for latest yt-dlp.exe
-    QString url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
-    QNetworkRequest request(url);
-    
-    // Set user agent
-    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
-    
-    m_logOutput->append(QString("Downloading from: %1").arg(url));
-    
-    // Start download
-    QNetworkReply *reply = manager->get(request);
-    
-    connect(reply, &QNetworkReply::downloadProgress, [this](qint64 received, qint64 total) {
-        if (total > 0) {
-            int percentage = (received * 100) / total;
-            m_logOutput->append(QString("Download progress: %1% (%2 / %3 bytes)")
-                               .arg(percentage)
-                               .arg(received)
-                               .arg(total));
-        }
-    });
-    
-    connect(reply, &QNetworkReply::finished, [this, reply, manager]() {
-        if (reply->error() == QNetworkReply::NoError) {
-            // Save the downloaded file
-            QString appDir = QCoreApplication::applicationDirPath();
-            QString ytDlpPath = appDir + "/yt-dlp.exe";
-            
-            QFile file(ytDlpPath);
-            if (file.open(QIODevice::WriteOnly)) {
-                file.write(reply->readAll());
-                file.close();
-                
-                // Make executable (though Windows doesn't need this)
-                file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner |
-                                   QFile::ReadGroup | QFile::ExeGroup |
-                                   QFile::ReadOther | QFile::ExeOther);
-                
-                m_logOutput->append("=== yt-dlp.exe downloaded successfully ===");
-                m_logOutput->append(QString("Saved to: %1").arg(ytDlpPath));
-                
-                // Check installation after download
-                QTimer::singleShot(500, [this]() {
-                    checkYtDlpInstallation();
-                });
-            } else {
-                m_logOutput->append("ERROR: Could not save yt-dlp.exe");
-                m_logOutput->append("Check write permissions in application directory");
-                m_ytDlpButton->setEnabled(true);
-            }
-        } else {
-            m_logOutput->append("ERROR: Failed to download yt-dlp.exe");
-            m_logOutput->append(QString("Error: %1").arg(reply->errorString()));
-            m_logOutput->append("Please check your internet connection");
-            m_ytDlpButton->setEnabled(true);
-        }
-        
-        reply->deleteLater();
-        manager->deleteLater();
-    });
-#endif
-}
 
 void MainWindow::adjustWindowSize()
 {

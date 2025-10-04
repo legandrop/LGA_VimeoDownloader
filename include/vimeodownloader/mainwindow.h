@@ -12,6 +12,8 @@
 #include <QGroupBox>
 #include <QSettings>
 
+class ToolsManager;
+
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
 
@@ -26,9 +28,9 @@ public:
 private slots:
     void onDownloadClicked();
     void onUrlChanged();
-    void onInstallUpdateYtDlpClicked();
     void onSaveCredentialsClicked();
     void onBrowseFolderClicked();
+    void onToolsStatusChanged(bool allInstalled);
 
 private:
     void setupUI();
@@ -37,10 +39,9 @@ private:
     void loadSettings();
     void saveSettings();
     void detectOperatingSystem();
-    void checkYtDlpInstallation();
     void adjustWindowSize();
-    void downloadYtDlpWindows();
     QString getConfigPath() const;
+    bool isValidVideoUrl(const QString &url) const;
     
     // UI Components
     QWidget *m_centralWidget;
@@ -64,7 +65,7 @@ private:
     QVBoxLayout *m_settingsLayout;
     QHBoxLayout *m_credentialsLayout;
     QHBoxLayout *m_folderLayout;
-    QHBoxLayout *m_ytDlpLayout;
+    QHBoxLayout *m_toolsLayout;
     
     // Credentials row
     QLineEdit *m_userInput;
@@ -74,11 +75,13 @@ private:
     // Folder row
     QLineEdit *m_downloadFolderInput;
     QPushButton *m_browseFolderButton;
-    QPushButton *m_ytDlpButton;
+    QPushButton *m_toolsButton;
     
     // Settings
     QSettings *m_settings;
-    bool m_ytDlpInstalled;
+    
+    // Tools manager
+    ToolsManager *m_toolsManager;
 };
 
 #endif // MAINWINDOW_H
