@@ -6,6 +6,8 @@ const QString ColorUtils::BG_SECCION = "#1d1d1d";
 const QString ColorUtils::TXT_PRINCIPAL = "#b2b2b2";
 const QString ColorUtils::BOTON_GRIS_OSCURO = "#443a91";
 const QString ColorUtils::BOTON_GRIS_OSCU_HOVER = "#774dcb";
+const QString ColorUtils::BOTON_ROJO = "#dc3545";
+const QString ColorUtils::BOTON_ROJO_HOVER = "#c82333";
 const QString ColorUtils::BORDER_PRINCIPAL = "#303030";
 const QString ColorUtils::ACCENT_COLOR = "#443a91";
 
@@ -44,6 +46,14 @@ QString ColorUtils::getStyleSheet()
         
         QPushButton[class="primary"]:hover {
             background-color: %4;
+        }
+        
+        QPushButton[class="danger"] {
+            background-color: %8;
+        }
+        
+        QPushButton[class="danger"]:hover {
+            background-color: %9;
         }
         
         QLineEdit {
@@ -103,7 +113,9 @@ QString ColorUtils::getStyleSheet()
     .arg(BOTON_GRIS_OSCU_HOVER) // %4
     .arg(BORDER_PRINCIPAL)  // %5
     .arg(ACCENT_COLOR)      // %6
-    .arg(BG_SECCION);       // %7
+    .arg(BG_SECCION)        // %7
+    .arg(BOTON_ROJO)        // %8
+    .arg(BOTON_ROJO_HOVER); // %9
 }
 
 QColor ColorUtils::hexToQColor(const QString &hex)

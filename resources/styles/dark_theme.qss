@@ -64,6 +64,20 @@ QPushButton.primary:pressed {
     background-color: #443a91;
 }
 
+/* Botón de peligro (install) */
+QPushButton.danger {
+    background-color: #dc3545;
+    color: #b2b2b2;
+}
+
+QPushButton.danger:hover {
+    background-color: #c82333;
+}
+
+QPushButton.danger:pressed {
+    background-color: #dc3545;
+}
+
 /* Estilo para inputs de texto */
 QLineEdit {
     background-color: #1d1d1d;

@@ -36,6 +36,7 @@ private:
     void setupConnections();
     void loadSettings();
     void saveSettings();
+    void detectOperatingSystem();
     void checkYtDlpInstallation();
     void adjustWindowSize();
     QString getConfigPath() const;
@@ -47,14 +48,12 @@ private:
     QGroupBox *m_inputGroup;
     QVBoxLayout *m_inputLayout;
     QHBoxLayout *m_urlLayout;
-    QLabel *m_urlLabel;
     QLineEdit *m_urlInput;
     QPushButton *m_downloadButton;
     
     QGroupBox *m_progressGroup;
     QVBoxLayout *m_progressLayout;
     QProgressBar *m_progressBar;
-    QLabel *m_statusLabel;
     
     QGroupBox *m_logGroup;
     QVBoxLayout *m_logLayout;

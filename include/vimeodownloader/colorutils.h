@@ -13,6 +13,8 @@ public:
     static const QString TXT_PRINCIPAL;
     static const QString BOTON_GRIS_OSCURO;
     static const QString BOTON_GRIS_OSCU_HOVER;
+    static const QString BOTON_ROJO;
+    static const QString BOTON_ROJO_HOVER;
     static const QString BORDER_PRINCIPAL;
     static const QString ACCENT_COLOR;
     
