@@ -23,6 +23,12 @@
 #include <QDir>
 #include <QProcess>
 #include <QRegularExpression>
+#include <QCoreApplication>
+#include <QFile>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -350,13 +356,15 @@ void MainWindow::onInstallUpdateYtDlpClicked()
     m_ytDlpButton->setEnabled(false);
     
 #ifdef Q_OS_WIN
-    // Windows not implemented yet
-    m_logOutput->append("=== Windows Installation ===");
-    m_logOutput->append("ERROR: Windows installation not implemented yet");
-    m_logOutput->append("Please install yt-dlp manually:");
-    m_logOutput->append("1. Install Python from python.org");
-    m_logOutput->append("2. Run: pip install yt-dlp");
-    m_ytDlpButton->setEnabled(true);
+    // Windows: Download yt-dlp.exe from GitHub
+    if (m_ytDlpInstalled) {
+        m_logOutput->append("=== Updating yt-dlp ===");
+        m_logOutput->append("Downloading latest yt-dlp.exe from GitHub...");
+    } else {
+        m_logOutput->append("=== Installing yt-dlp ===");
+        m_logOutput->append("Downloading yt-dlp.exe from GitHub...");
+    }
+    downloadYtDlpWindows();
     return;
 #endif
     
@@ -529,15 +537,27 @@ void MainWindow::checkYtDlpInstallation()
     m_logOutput->append("Checking yt-dlp installation...");
     
 #ifdef Q_OS_WIN
-    // Windows detection not fully implemented yet
-    m_logOutput->append("Windows yt-dlp detection: Not fully implemented");
-    m_logOutput->append("Please verify yt-dlp is installed manually");
-    m_ytDlpInstalled = false;
-    m_ytDlpButton->setText("Install yt-dlp");
-    m_ytDlpButton->setProperty("class", "danger");
-    style()->unpolish(m_ytDlpButton);
-    style()->polish(m_ytDlpButton);
-    m_ytDlpButton->setEnabled(true);
+    // Windows: Check if yt-dlp.exe exists in the same directory as the executable
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString ytDlpPath = appDir + "/yt-dlp.exe";
+    
+    if (QFile::exists(ytDlpPath)) {
+        m_ytDlpInstalled = true;
+        m_ytDlpButton->setText("Update yt-dlp");
+        m_ytDlpButton->setProperty("class", "");
+        style()->unpolish(m_ytDlpButton);
+        style()->polish(m_ytDlpButton);
+        m_ytDlpButton->setEnabled(true);
+        m_logOutput->append("✓ yt-dlp.exe found in application directory");
+    } else {
+        m_ytDlpInstalled = false;
+        m_ytDlpButton->setText("Install yt-dlp");
+        m_ytDlpButton->setProperty("class", "danger");
+        style()->unpolish(m_ytDlpButton);
+        style()->polish(m_ytDlpButton);
+        m_ytDlpButton->setEnabled(true);
+        m_logOutput->append("✗ yt-dlp.exe not found in application directory");
+    }
     onUrlChanged();
     return;
 #endif
@@ -624,13 +644,83 @@ void MainWindow::detectOperatingSystem()
 #elif defined(Q_OS_WIN)
     m_logOutput->append("=== System Information ===");
     m_logOutput->append("Operating System: Windows");
-    m_logOutput->append("yt-dlp installation: Not implemented yet");
+    m_logOutput->append("yt-dlp installation method: Download from GitHub");
+    m_logOutput->append("yt-dlp location: Application directory");
     m_logOutput->append("===========================");
 #else
     m_logOutput->append("=== System Information ===");
     m_logOutput->append("Operating System: Linux/Other");
     m_logOutput->append("yt-dlp installation: Not implemented yet");
     m_logOutput->append("===========================");
+#endif
+}
+
+void MainWindow::downloadYtDlpWindows()
+{
+#ifdef Q_OS_WIN
+    // Create network manager
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    
+    // GitHub URL for latest yt-dlp.exe
+    QString url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe";
+    QNetworkRequest request(url);
+    
+    // Set user agent
+    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    
+    m_logOutput->append(QString("Downloading from: %1").arg(url));
+    
+    // Start download
+    QNetworkReply *reply = manager->get(request);
+    
+    connect(reply, &QNetworkReply::downloadProgress, [this](qint64 received, qint64 total) {
+        if (total > 0) {
+            int percentage = (received * 100) / total;
+            m_logOutput->append(QString("Download progress: %1% (%2 / %3 bytes)")
+                               .arg(percentage)
+                               .arg(received)
+                               .arg(total));
+        }
+    });
+    
+    connect(reply, &QNetworkReply::finished, [this, reply, manager]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // Save the downloaded file
+            QString appDir = QCoreApplication::applicationDirPath();
+            QString ytDlpPath = appDir + "/yt-dlp.exe";
+            
+            QFile file(ytDlpPath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write(reply->readAll());
+                file.close();
+                
+                // Make executable (though Windows doesn't need this)
+                file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner |
+                                   QFile::ReadGroup | QFile::ExeGroup |
+                                   QFile::ReadOther | QFile::ExeOther);
+                
+                m_logOutput->append("=== yt-dlp.exe downloaded successfully ===");
+                m_logOutput->append(QString("Saved to: %1").arg(ytDlpPath));
+                
+                // Check installation after download
+                QTimer::singleShot(500, [this]() {
+                    checkYtDlpInstallation();
+                });
+            } else {
+                m_logOutput->append("ERROR: Could not save yt-dlp.exe");
+                m_logOutput->append("Check write permissions in application directory");
+                m_ytDlpButton->setEnabled(true);
+            }
+        } else {
+            m_logOutput->append("ERROR: Failed to download yt-dlp.exe");
+            m_logOutput->append(QString("Error: %1").arg(reply->errorString()));
+            m_logOutput->append("Please check your internet connection");
+            m_ytDlpButton->setEnabled(true);
+        }
+        
+        reply->deleteLater();
+        manager->deleteLater();
+    });
 #endif
 }
 

@@ -39,6 +39,7 @@ private:
     void detectOperatingSystem();
     void checkYtDlpInstallation();
     void adjustWindowSize();
+    void downloadYtDlpWindows();
     QString getConfigPath() const;
     
     // UI Components
