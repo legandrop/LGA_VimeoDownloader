@@ -50,19 +50,7 @@ QPushButton:disabled {
     color: #9d9d9d;
 }
 
-/* Botón primario (download) */
-QPushButton.primary {
-    background-color: #443a91;
-    color: #b2b2b2;
-}
-
-QPushButton.primary:hover {
-    background-color: #774dcb;
-}
-
-QPushButton.primary:pressed {
-    background-color: #443a91;
-}
+/* Estilos .primary eliminados - ya no se usan */
 
 /* Botón de peligro (install) */
 QPushButton.danger {
@@ -83,6 +71,8 @@ QPushButton#toolsButton {
     padding: 8px 4px; /* Padding horizontal muy reducido para que quepa en 110px */
     font-size: 13px; /* Fuente ligeramente más pequeña si es necesario */
 }
+
+/* Estilos específicos para downloadButton eliminados - usar estilos generales */
 
 /* GroupBox clickeable del log - estado expandido */
 QGroupBox#logGroupBox {

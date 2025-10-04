@@ -149,9 +149,7 @@ void MainWindow::setupUI()
     m_urlInput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     m_downloadButton = new QPushButton("Download", this);
-    m_downloadButton->setObjectName("downloadButton");
-    m_downloadButton->setProperty("class", "primary");
-    m_downloadButton->setEnabled(false);
+    m_downloadButton->setEnabled(true); // Temporalmente habilitado para testing
     m_downloadButton->setFixedWidth(110);
 
     m_urlLayout->addWidget(m_urlInput);
@@ -288,22 +286,19 @@ void MainWindow::setupUI()
 
 void MainWindow::setupStyles()
 {
-    // Aplicar clase CSS al botón de descarga
-    m_downloadButton->setProperty("class", "primary");
-    
     // Forzar actualización de estilos para todos los botones
     style()->unpolish(m_downloadButton);
     style()->polish(m_downloadButton);
-    
+
     style()->unpolish(m_saveCredentialsButton);
     style()->polish(m_saveCredentialsButton);
-    
+
     style()->unpolish(m_browseFolderButton);
     style()->polish(m_browseFolderButton);
-    
+
     style()->unpolish(m_toolsButton);
     style()->polish(m_toolsButton);
-    
+
     style()->unpolish(m_cancelButton);
     style()->polish(m_cancelButton);
 }
@@ -376,7 +371,9 @@ void MainWindow::onUrlChanged()
     bool hasCredentials = !user.isEmpty() && !password.isEmpty();
     bool hasDownloadDir = !downloadDir.isEmpty();
     
-    m_downloadButton->setEnabled(isValidUrl && hasCredentials && hasDownloadDir && m_toolsManager->areToolsInstalled());
+    // Temporalmente siempre habilitado para testing - comentar esta línea después de probar
+    m_downloadButton->setEnabled(true);
+    // m_downloadButton->setEnabled(isValidUrl && hasCredentials && hasDownloadDir && m_toolsManager->areToolsInstalled());
 }
 
 void MainWindow::onToolsStatusChanged(bool allInstalled)
