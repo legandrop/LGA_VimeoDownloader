@@ -112,16 +112,16 @@ void MainWindow::setupUI()
     // Layout principal
     m_mainLayout = new QVBoxLayout(m_centralWidget);
     m_mainLayout->setSpacing(16);
-    m_mainLayout->setContentsMargins(20, 20, 20, 20);
+    m_mainLayout->setContentsMargins(16, 20, 12, 20);
 
     // Establecer restricción fija para evitar redimensionamiento automático
-    // cuando cambie la visibilidad de widgets internos (como el log)
+    // pero permitir ajustes manuales cuando cambie la visibilidad de widgets internos (como el log)
     m_mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     
     // Video URL Group
     m_inputGroup = new QGroupBox("Video URL", this);
     // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
-    m_inputGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    m_inputGroup->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     m_inputLayout = new QVBoxLayout(m_inputGroup);
     m_inputLayout->setSpacing(8);
     
@@ -129,13 +129,14 @@ void MainWindow::setupUI()
     m_urlLayout = new QHBoxLayout();
     m_urlInput = new QLineEdit(this);
     m_urlInput->setPlaceholderText("https://vimeo.com/... or https://youtube.com/...");
-    
+    m_urlInput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
     m_downloadButton = new QPushButton("Download", this);
     m_downloadButton->setObjectName("downloadButton");
     m_downloadButton->setProperty("class", "primary");
     m_downloadButton->setEnabled(false);
     m_downloadButton->setFixedWidth(110);
-    
+
     m_urlLayout->addWidget(m_urlInput);
     m_urlLayout->addWidget(m_downloadButton);
     
@@ -144,7 +145,7 @@ void MainWindow::setupUI()
     // Progress Group
     m_progressGroup = new QGroupBox("Progress (0/0)", this);
     // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
-    m_progressGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    m_progressGroup->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     m_progressLayout = new QVBoxLayout(m_progressGroup);
     m_progressLayout->setSpacing(8);
     
@@ -154,12 +155,13 @@ void MainWindow::setupUI()
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
     m_progressBar->setTextVisible(false); // Hide percentage text when inactive
-    
+    m_progressBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
     m_cancelButton = new QPushButton("Cancel", this);
     m_cancelButton->setObjectName("cancelButton");
     m_cancelButton->setFixedWidth(110); // Same width as download button
     // No danger class - same color as other buttons
-    
+
     m_progressButtonLayout->addWidget(m_progressBar);
     m_progressButtonLayout->addWidget(m_cancelButton);
     
@@ -190,7 +192,7 @@ void MainWindow::setupUI()
     // Settings Group
     m_settingsGroup = new QGroupBox("Settings", this);
     // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
-    m_settingsGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+    m_settingsGroup->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     m_settingsLayout = new QVBoxLayout(m_settingsGroup);
     m_settingsLayout->setSpacing(8);
     
@@ -198,14 +200,16 @@ void MainWindow::setupUI()
     m_credentialsLayout = new QHBoxLayout();
     m_userInput = new QLineEdit(this);
     m_userInput->setPlaceholderText("Vimeo Username...");
-    
+    m_userInput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
     m_passwordInput = new QLineEdit(this);
     m_passwordInput->setEchoMode(QLineEdit::Password);
     m_passwordInput->setPlaceholderText("Vimeo Password...");
-    
+    m_passwordInput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
     m_saveCredentialsButton = new QPushButton("Save", this);
     m_saveCredentialsButton->setFixedWidth(110);
-    
+
     m_credentialsLayout->addWidget(m_userInput);
     m_credentialsLayout->addWidget(m_passwordInput);
     m_credentialsLayout->addWidget(m_saveCredentialsButton);
@@ -214,10 +218,11 @@ void MainWindow::setupUI()
     m_folderLayout = new QHBoxLayout();
     m_downloadFolderInput = new QLineEdit(this);
     m_downloadFolderInput->setPlaceholderText("Download Folder...");
-    
+    m_downloadFolderInput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
     m_browseFolderButton = new QPushButton("Browse", this);
     m_browseFolderButton->setFixedWidth(110);
-    
+
     m_folderLayout->addWidget(m_downloadFolderInput);
     m_folderLayout->addWidget(m_browseFolderButton);
     
@@ -534,7 +539,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 void MainWindow::onLogToggleClicked()
 {
     m_logExpanded = !m_logExpanded;
-    
+
     if (m_logExpanded) {
         m_logGroup->setTitle("Log ⌄");
         m_logGroup->setProperty("collapsed", false); // Not collapsed
@@ -552,13 +557,13 @@ void MainWindow::onLogToggleClicked()
         m_logLayout->setSpacing(0); // No spacing between widgets
         m_logOutput->hide();
     }
-    
+
     // Force style refresh to apply new property
     m_logGroup->style()->unpolish(m_logGroup);
     m_logGroup->style()->polish(m_logGroup);
-    
-    // Adjust window size after toggling
-    QTimer::singleShot(50, this, &MainWindow::adjustWindowSize);
+
+    // Adjust window size after toggling with a small delay to ensure proper layout calculation
+    QTimer::singleShot(100, this, &MainWindow::adjustWindowSize);
 }
 
 void MainWindow::adjustWindowSize()
@@ -570,8 +575,8 @@ void MainWindow::adjustWindowSize()
     QSize sizeHint = m_centralWidget->sizeHint();
 
     // El layout tiene restricción fija, así que establecemos el tamaño manualmente
-    int extraWidth = 20;
-    int finalWidth = qMax(550, sizeHint.width() + extraWidth);
+    int extraWidth = 5;
+    int finalWidth = sizeHint.width() + extraWidth;
 
     // Calcular altura según el estado del log
     int finalHeight;
@@ -585,9 +590,10 @@ void MainWindow::adjustWindowSize()
         finalHeight = qMax(380, finalHeight); // Mínimo para colapsado
     }
 
-    // Establecer tamaño fijo (la restricción del layout evita cambios automáticos)
+    // Ajustar el tamaño de la ventana al tamaño óptimo
     setFixedSize(finalWidth, finalHeight);
 
-    // También actualizar el tamaño mínimo por si acaso
-    setMinimumSize(finalWidth, finalHeight);
+    // También establecer el tamaño mínimo para permitir algo de flexibilidad
+    setMinimumSize(400, finalHeight);
+    setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 }
