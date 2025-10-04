@@ -97,7 +97,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Ajustar tamaño inicial y establecer ancho máximo
     adjustWindowSize();
     // Después del ajuste inicial, aseguramos que el ancho máximo esté establecido
-    QTimer::singleShot(200, this, [this]() {
+    // y que todos los widgets estén completamente inicializados
+    QTimer::singleShot(500, this, [this]() {
         adjustWindowSize();
     });
     
@@ -640,8 +641,18 @@ void MainWindow::onSettingsToggleClicked()
     QTimer::singleShot(100, this, &MainWindow::adjustWindowSize);
 }
 
+// Height constants for window sizing (configurable values) - defined here for easy adjustment
+
 void MainWindow::adjustWindowSize()
 {
+    // Height constants for window sizing (configurable values) - defined here for easy adjustment
+    static const int MIN_HEIGHT_BOTH_EXPANDED = 600;      // Ambas secciones expandidas
+    static const int MIN_HEIGHT_BOTH_COLLAPSED = 300;    // Ambas secciones contraídas
+    static const int MIN_HEIGHT_LOG_EXPANDED = 500;      // Solo Log expandido, Settings contraído
+    static const int MIN_HEIGHT_SETTINGS_EXPANDED = 350; // Solo Settings expandido, Log contraído
+    static const int MAX_HEIGHT_LOG_EXPANDED = 650;      // Máximo cuando Log está expandido
+    static const int MAX_HEIGHT_SETTINGS_EXPANDED = 620;  // Máximo cuando Settings está expandido
+
     // Forzar el cálculo del tamaño de todos los widgets
     m_centralWidget->adjustSize();
 
@@ -662,16 +673,36 @@ void MainWindow::adjustWindowSize()
 
     // Calcular altura según el estado del log y settings
     int finalHeight;
-    bool anyExpanded = m_logExpanded || m_settingsExpanded;
 
-    if (anyExpanded) {
-        // Cuando cualquier sección está expandida, usar altura completa
+    // Usar el sizeHint cuando ambas secciones están en el mismo estado (ambas expandidas o ambas contraídas)
+    bool anyExpanded = m_logExpanded || m_settingsExpanded;
+    bool bothSameState = (m_logExpanded && m_settingsExpanded) || (!m_logExpanded && !m_settingsExpanded);
+
+    if (bothSameState) {
+        // Cuando ambas están en el mismo estado, usar el sizeHint que funciona bien
         finalHeight = sizeHint.height();
-        finalHeight = qMax(600, finalHeight); // Mínimo para expandido
+        finalHeight = anyExpanded ? qMax(MIN_HEIGHT_BOTH_EXPANDED, finalHeight) : qMax(MIN_HEIGHT_BOTH_COLLAPSED, finalHeight);
     } else {
-        // Cuando ambas secciones están colapsadas, usar altura compacta
-        finalHeight = sizeHint.height();
-        finalHeight = qMax(380, finalHeight); // Mínimo para colapsado
+        // Una sección expandida y otra contraída - usar constantes específicas
+        if (m_logExpanded && !m_settingsExpanded) {
+            // Solo Log expandido, Settings contraído
+            finalHeight = sizeHint.height();
+            if (finalHeight > MAX_HEIGHT_LOG_EXPANDED) {
+                finalHeight = MAX_HEIGHT_LOG_EXPANDED;
+            }
+            finalHeight = qMax(MIN_HEIGHT_LOG_EXPANDED, finalHeight);
+        } else if (!m_logExpanded && m_settingsExpanded) {
+            // Solo Settings expandido, Log contraído
+            finalHeight = sizeHint.height();
+            if (finalHeight > MAX_HEIGHT_SETTINGS_EXPANDED) {
+                finalHeight = MAX_HEIGHT_SETTINGS_EXPANDED;
+            }
+            finalHeight = qMax(MIN_HEIGHT_SETTINGS_EXPANDED, finalHeight);
+        } else {
+            // Fallback - ambas contraídas (aunque no debería llegar aquí)
+            finalHeight = sizeHint.height();
+            finalHeight = qMax(MIN_HEIGHT_BOTH_COLLAPSED, finalHeight);
+        }
     }
 
     // Ajustar el tamaño de la ventana al tamaño óptimo
