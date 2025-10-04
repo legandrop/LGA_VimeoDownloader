@@ -26,6 +26,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 private slots:
     void onDownloadClicked();
     void onUrlChanged();
@@ -37,6 +40,7 @@ private slots:
     void onQueueStatusChanged(int current, int total);
     void onDownloadAddedToQueue(int totalCount);
     void onCancelClicked();
+    void onLogToggleClicked();
 
 private:
     void setupUI();
@@ -69,6 +73,7 @@ private:
     QGroupBox *m_logGroup;
     QVBoxLayout *m_logLayout;
     QTextEdit *m_logOutput;
+    bool m_logExpanded;
     
     QGroupBox *m_settingsGroup;
     QVBoxLayout *m_settingsLayout;

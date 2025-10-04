@@ -78,6 +78,38 @@ QPushButton.danger:pressed {
     background-color: #dc3545;
 }
 
+/* Botón de tools con padding muy reducido */
+QPushButton#toolsButton {
+    padding: 8px 4px; /* Padding horizontal muy reducido para que quepa en 110px */
+    font-size: 13px; /* Fuente ligeramente más pequeña si es necesario */
+}
+
+/* GroupBox clickeable del log */
+QGroupBox#logGroupBox {
+    color: #b2b2b2;
+    border: 1px solid #555555;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    font-weight: 500;
+    background-color: #1d1d1d;
+}
+
+QGroupBox#logGroupBox:hover {
+    color: #ffffff; /* Título en blanco al hacer hover */
+}
+
+QGroupBox#logGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px 0 5px;
+    color: #b2b2b2;
+}
+
+QGroupBox#logGroupBox:hover::title {
+    color: #ffffff; /* Título en blanco al hacer hover */
+}
+
 /* Estilo para inputs de texto */
 QLineEdit {
     background-color: #1d1d1d;

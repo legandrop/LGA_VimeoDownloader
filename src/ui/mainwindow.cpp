@@ -31,6 +31,8 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
+#include <QMouseEvent>
+#include <QEvent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -50,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_logGroup(nullptr)
     , m_logLayout(nullptr)
     , m_logOutput(nullptr)
+    , m_logExpanded(true)
     , m_settingsGroup(nullptr)
     , m_settingsLayout(nullptr)
     , m_credentialsLayout(nullptr)
@@ -125,7 +128,7 @@ void MainWindow::setupUI()
     m_downloadButton->setObjectName("downloadButton");
     m_downloadButton->setProperty("class", "primary");
     m_downloadButton->setEnabled(false);
-    m_downloadButton->setFixedWidth(100);
+    m_downloadButton->setFixedWidth(110);
     
     m_urlLayout->addWidget(m_urlInput);
     m_urlLayout->addWidget(m_downloadButton);
@@ -146,7 +149,7 @@ void MainWindow::setupUI()
     
     m_cancelButton = new QPushButton("Cancel", this);
     m_cancelButton->setObjectName("cancelButton");
-    m_cancelButton->setFixedWidth(100); // Same width as download button
+    m_cancelButton->setFixedWidth(110); // Same width as download button
     // No danger class - same color as other buttons
     
     m_progressButtonLayout->addWidget(m_progressBar);
@@ -157,8 +160,10 @@ void MainWindow::setupUI()
     
     m_progressLayout->addLayout(m_progressButtonLayout);
     
-    // Log Group
-    m_logGroup = new QGroupBox("Log", this);
+    // Log Group - restored to original with clickable title
+    m_logGroup = new QGroupBox("Log ⌄", this);
+    m_logGroup->setObjectName("logGroupBox");
+    m_logGroup->setCursor(Qt::PointingHandCursor);
     m_logLayout = new QVBoxLayout(m_logGroup);
     
     m_logOutput = new QTextEdit(this);
@@ -184,7 +189,7 @@ void MainWindow::setupUI()
     m_passwordInput->setPlaceholderText("Vimeo Password...");
     
     m_saveCredentialsButton = new QPushButton("Save", this);
-    m_saveCredentialsButton->setFixedWidth(100);
+    m_saveCredentialsButton->setFixedWidth(110);
     
     m_credentialsLayout->addWidget(m_userInput);
     m_credentialsLayout->addWidget(m_passwordInput);
@@ -196,7 +201,7 @@ void MainWindow::setupUI()
     m_downloadFolderInput->setPlaceholderText("Download Folder...");
     
     m_browseFolderButton = new QPushButton("Browse", this);
-    m_browseFolderButton->setFixedWidth(100);
+    m_browseFolderButton->setFixedWidth(110);
     
     m_folderLayout->addWidget(m_downloadFolderInput);
     m_folderLayout->addWidget(m_browseFolderButton);
@@ -204,8 +209,9 @@ void MainWindow::setupUI()
     // Third row: tools button aligned right
     m_toolsLayout = new QHBoxLayout();
     m_toolsButton = new QPushButton("Checking Tools...", this);
+    m_toolsButton->setObjectName("toolsButton");
     m_toolsButton->setEnabled(false);
-    m_toolsButton->setFixedWidth(120);
+    m_toolsButton->setFixedWidth(110);
     
     m_toolsLayout->addStretch(); // Push button to the right
     m_toolsLayout->addWidget(m_toolsButton);
@@ -251,6 +257,9 @@ void MainWindow::setupConnections()
     connect(m_saveCredentialsButton, &QPushButton::clicked, this, &MainWindow::onSaveCredentialsClicked);
     connect(m_browseFolderButton, &QPushButton::clicked, this, &MainWindow::onBrowseFolderClicked);
     connect(m_cancelButton, &QPushButton::clicked, this, &MainWindow::onCancelClicked);
+    
+    // Install event filter for log group box to capture clicks
+    m_logGroup->installEventFilter(this);
 }
 
 void MainWindow::onDownloadClicked()
@@ -487,6 +496,34 @@ void MainWindow::detectOperatingSystem()
 }
 
 
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == m_logGroup && event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            onLogToggleClicked();
+            return true;
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::onLogToggleClicked()
+{
+    m_logExpanded = !m_logExpanded;
+    
+    if (m_logExpanded) {
+        m_logGroup->setTitle("Log ⌄");
+        m_logOutput->show();
+    } else {
+        m_logGroup->setTitle("Log ⌃");
+        m_logOutput->hide();
+    }
+    
+    // Adjust window size after toggling
+    QTimer::singleShot(50, this, &MainWindow::adjustWindowSize);
+}
+
 void MainWindow::adjustWindowSize()
 {
     // Forzar el cálculo del tamaño de todos los widgets
@@ -501,7 +538,7 @@ void MainWindow::adjustWindowSize()
     
     // Calcular tamaño final
     int finalWidth = qMax(550, sizeHint.width() + extraWidth);   // Mínimo 550px de ancho
-    int finalHeight = qMax(580, sizeHint.height() + extraHeight); // Mínimo 580px de alto
+    int finalHeight = qMax(380, sizeHint.height() + extraHeight); // Mínimo más bajo para cuando log está colapsado
     
     // Establecer tamaño mínimo y actual
     setMinimumSize(finalWidth, finalHeight);
