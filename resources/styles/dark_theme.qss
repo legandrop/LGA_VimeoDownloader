@@ -1,0 +1,148 @@
+/* Tema oscuro para VimeoDownloader - Basado en PipeSync */
+
+/* Estilo general para la aplicación */
+QWidget {
+    background-color: #1d1d1d; /* Fondo principal */
+    color: #b2b2b2;  /* Texto principal */
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0px;
+}
+
+/* Estilo para labels */
+QLabel {
+    color: #b2b2b2;
+    background-color: transparent;
+    padding: 2px 0px;
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0px;
+}
+
+/* Estilo para botones */
+QPushButton {
+    background-color: #443a91;
+    color: #b2b2b2;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0px;
+    min-height: 20px;
+}
+
+QPushButton:hover {
+    background-color: #774dcb;
+}
+
+QPushButton:pressed {
+    background-color: #443a91;
+}
+
+QPushButton:disabled {
+    background-color: #3a3a3a;
+    color: #9d9d9d;
+}
+
+/* Botón primario (download) */
+QPushButton.primary {
+    background-color: #443a91;
+    color: #b2b2b2;
+}
+
+QPushButton.primary:hover {
+    background-color: #774dcb;
+}
+
+QPushButton.primary:pressed {
+    background-color: #443a91;
+}
+
+/* Estilo para inputs de texto */
+QLineEdit {
+    background-color: #1d1d1d;
+    color: #b2b2b2;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    selection-background-color: #443a91;
+}
+
+QLineEdit:focus {
+    border-color: #443a91;
+    background-color: #2a2a2a;
+}
+
+QLineEdit:hover {
+    border-color: #666666;
+}
+
+/* Estilo para la ventana principal */
+QMainWindow {
+    background-color: #1d1d1d;
+}
+
+/* Estilo para el widget central */
+QWidget#centralWidget {
+    background-color: #1d1d1d;
+    border: none;
+}
+
+/* Estilo para grupos de widgets */
+QGroupBox {
+    color: #b2b2b2;
+    border: 1px solid #555555;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    font-weight: 500;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px 0 5px;
+    color: #b2b2b2;
+}
+
+/* Estilo para barras de progreso */
+QProgressBar {
+    border: 1px solid #555555;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #3a3a3a;
+    color: #b2b2b2;
+}
+
+QProgressBar::chunk {
+    background-color: #443a91;
+    border-radius: 3px;
+}
+
+/* Estilo para tooltips */
+QToolTip {
+    background-color: #1a1a1a;
+    color: #b2b2b2;
+    border: 1px solid #555555;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Estilo para QTextEdit */
+QTextEdit {
+    background-color: #1d1d1d;
+    color: #b2b2b2;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    padding: 4px;
+}

@@ -1,0 +1,25 @@
+{
+	"BUILD_DIR" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/VimeoDownloader_autogen",
+	"CMAKE_BINARY_DIR" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader",
+	"CMAKE_SOURCE_DIR" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader",
+	"CROSS_CONFIG" : false,
+	"GENERATOR" : "Unix Makefiles",
+	"INCLUDE_DIR" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/VimeoDownloader_autogen/include",
+	"INPUTS" : 
+	[
+		"/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/resources/styles/dark_theme.qss"
+	],
+	"LOCK_FILE" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/VimeoDownloader_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "--no-zstd", "-name", "resources" ],
+	"OUTPUT_CHECKSUM" : "3YJK5W5UP7",
+	"OUTPUT_NAME" : "qrc_resources.cpp",
+	"RCC_EXECUTABLE" : "/Users/leg4/Qt/6.8.2/macos/libexec/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/VimeoDownloader_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Used.txt",
+	"SOURCE" : "/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/resources/resources.qrc",
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}
