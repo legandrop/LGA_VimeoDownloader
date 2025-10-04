@@ -35,6 +35,7 @@ private slots:
     void onSaveCredentialsClicked();
     void onBrowseFolderClicked();
     void onToolsStatusChanged(bool allInstalled);
+    void onToolsStatusChangedForInitialState(bool allInstalled);
     void onDownloadStarted();
     void onDownloadCompleted();
     void onQueueStatusChanged(int current, int total);
@@ -53,6 +54,8 @@ private:
     void adjustWindowSize();
     QString getConfigPath() const;
     bool isValidVideoUrl(const QString &url) const;
+    bool shouldShowSettingsExpanded();
+    void setInitialSettingsState();
     
     // UI Components
     QWidget *m_centralWidget;

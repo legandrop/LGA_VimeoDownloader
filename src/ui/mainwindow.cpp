@@ -3,7 +3,6 @@
 #include "vimeodownloader/colorutils.h"
 #include "vimeodownloader/toolsmanager.h"
 #include "vimeodownloader/downloadqueue.h"
-
 #include <QApplication>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -34,6 +33,11 @@
 #include <QMouseEvent>
 #include <QEvent>
 
+
+// Constante para mantener consistencia de ancho del grupo settings
+constexpr int SETTINGS_GROUP_WIDTH = 520;
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_centralWidget(nullptr)
@@ -55,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_logExpanded(false)
     , m_settingsGroup(nullptr)
     , m_settingsLayout(nullptr)
-    , m_settingsExpanded(true)
+    , m_settingsExpanded(false)
     , m_credentialsLayout(nullptr)
     , m_folderLayout(nullptr)
     , m_toolsLayout(nullptr)
@@ -68,7 +72,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_settings(nullptr)
     , m_toolsManager(nullptr)
     , m_downloadQueue(nullptr)
-    , m_maxWindowWidth(0)
+    , m_maxWindowWidth(550) // Ancho mínimo para evitar problemas cuando settings inicia colapsado
 {
     // Inicializar configuración
     m_settings = new QSettings(getConfigPath(), QSettings::IniFormat, this);
@@ -82,7 +86,11 @@ MainWindow::MainWindow(QWidget *parent)
     // Initialize tools manager
     m_toolsManager = new ToolsManager(m_logOutput, m_toolsButton, this);
     connect(m_toolsManager, &ToolsManager::toolsStatusChanged, this, &MainWindow::onToolsStatusChanged);
+    connect(m_toolsManager, &ToolsManager::toolsStatusChanged, this, &MainWindow::onToolsStatusChangedForInitialState);
     m_toolsManager->checkToolsInstallation();
+
+    // Set initial settings state based on credentials (tools status will be handled by signal)
+    setInitialSettingsState();
     
     // Initialize download queue
     m_downloadQueue = new DownloadQueue(m_logOutput, m_progressBar, m_progressGroup, this);
@@ -207,6 +215,8 @@ void MainWindow::setupUI()
     m_settingsGroup->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     m_settingsLayout = new QVBoxLayout(m_settingsGroup);
     m_settingsLayout->setSpacing(8);
+    // Agregar padding interno consistente con otras secciones cuando esté expandido
+    m_settingsLayout->setContentsMargins(10, 10, 10, 4);
     
     // First row: Username | Password | Save
     m_credentialsLayout = new QHBoxLayout();
@@ -225,6 +235,9 @@ void MainWindow::setupUI()
     m_credentialsLayout->addWidget(m_userInput);
     m_credentialsLayout->addWidget(m_passwordInput);
     m_credentialsLayout->addWidget(m_saveCredentialsButton);
+
+    // Agregar padding interno consistente con otros grupos
+    m_credentialsLayout->setContentsMargins(10, 4, 10, 4);
     
     // Second row: Download Folder | Browse
     m_folderLayout = new QHBoxLayout();
@@ -237,6 +250,9 @@ void MainWindow::setupUI()
 
     m_folderLayout->addWidget(m_downloadFolderInput);
     m_folderLayout->addWidget(m_browseFolderButton);
+
+    // Agregar padding interno consistente con otros grupos
+    m_folderLayout->setContentsMargins(10, 4, 10, 4);
     
     // Third row: tools button aligned right
     m_toolsLayout = new QHBoxLayout();
@@ -244,14 +260,17 @@ void MainWindow::setupUI()
     m_toolsButton->setObjectName("toolsButton");
     m_toolsButton->setEnabled(false);
     m_toolsButton->setFixedWidth(110);
-    
+
     // Usar un widget spacer fijo en lugar de addStretch() para evitar recálculos
     QWidget *spacer = new QWidget(this);
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     spacer->setFixedHeight(0);
-    
+
     m_toolsLayout->addWidget(spacer);
     m_toolsLayout->addWidget(m_toolsButton);
+
+    // Agregar padding interno consistente con otros grupos
+    m_toolsLayout->setContentsMargins(10, 4, 10, 10);
     
     m_settingsLayout->addLayout(m_credentialsLayout);
     m_settingsLayout->addLayout(m_folderLayout);
@@ -293,11 +312,12 @@ void MainWindow::setupConnections()
 {
     // Connect UI signals
     connect(m_urlInput, &QLineEdit::textChanged, this, &MainWindow::onUrlChanged);
+    connect(m_urlInput, &QLineEdit::returnPressed, this, &MainWindow::onDownloadClicked);
     connect(m_downloadButton, &QPushButton::clicked, this, &MainWindow::onDownloadClicked);
     connect(m_saveCredentialsButton, &QPushButton::clicked, this, &MainWindow::onSaveCredentialsClicked);
     connect(m_browseFolderButton, &QPushButton::clicked, this, &MainWindow::onBrowseFolderClicked);
     connect(m_cancelButton, &QPushButton::clicked, this, &MainWindow::onCancelClicked);
-    
+
     // Install event filter for log group box to capture clicks
     m_logGroup->installEventFilter(this);
 
@@ -452,7 +472,7 @@ void MainWindow::loadSettings()
     QString user = m_settings->value("vimeo/username", "").toString();
     QString password = m_settings->value("vimeo/password", "").toString();
     QString downloadFolder = m_settings->value("download/folder", "").toString();
-    
+
     // Only set text if values exist, otherwise keep placeholders
     if (!user.isEmpty()) {
         m_userInput->setText(user);
@@ -462,6 +482,114 @@ void MainWindow::loadSettings()
     }
     if (!downloadFolder.isEmpty()) {
         m_downloadFolderInput->setText(downloadFolder);
+    }
+}
+
+bool MainWindow::shouldShowSettingsExpanded()
+{
+    // Settings debe abrir expandido si:
+    // 1. Usuario o contraseña están vacíos (no guardados)
+    QString user = m_settings->value("vimeo/username", "").toString();
+    QString password = m_settings->value("vimeo/password", "").toString();
+    bool credentialsEmpty = user.isEmpty() || password.isEmpty();
+
+    // 2. O si la carpeta de destino está vacía
+    QString downloadDir = m_settings->value("download/folder", "").toString();
+    bool downloadDirEmpty = downloadDir.isEmpty();
+
+    // 3. O si las herramientas no están instaladas
+    bool toolsNotInstalled = m_toolsManager && !m_toolsManager->areToolsInstalled();
+
+    return credentialsEmpty || downloadDirEmpty || toolsNotInstalled;
+}
+
+void MainWindow::setInitialSettingsState()
+{
+    // Determinar estado inicial basado en credenciales, carpeta de destino y herramientas
+    QString user = m_settings->value("vimeo/username", "").toString();
+    QString password = m_settings->value("vimeo/password", "").toString();
+    QString downloadDir = m_settings->value("download/folder", "").toString();
+
+    bool credentialsEmpty = user.isEmpty() || password.isEmpty();
+    bool downloadDirEmpty = downloadDir.isEmpty();
+
+    // Settings inicia expandido si no hay credenciales o no hay carpeta de destino
+    m_settingsExpanded = credentialsEmpty || downloadDirEmpty;
+
+    // Configurar estado visual inicial
+    if (m_settingsExpanded) {
+        m_settingsGroup->setTitle("Settings ⌄");
+        m_settingsGroup->setProperty("collapsed", false);
+        m_settingsGroup->setFixedHeight(QWIDGETSIZE_MAX);
+        m_settingsGroup->setMinimumHeight(0);
+        m_settingsGroup->setMaximumHeight(QWIDGETSIZE_MAX);
+        // Mantener ancho consistente cuando está expandido
+        m_settingsGroup->setMinimumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsGroup->setMaximumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsLayout->setContentsMargins(3, 2, 3, 3);
+        m_settingsLayout->setSpacing(8);
+        // Show all settings widgets
+        m_userInput->show();
+        m_passwordInput->show();
+        m_saveCredentialsButton->show();
+        m_downloadFolderInput->show();
+        m_browseFolderButton->show();
+        m_toolsButton->show();
+    } else {
+        m_settingsGroup->setTitle("Settings >");
+        m_settingsGroup->setProperty("collapsed", true);
+        m_settingsGroup->setFixedHeight(35);
+        // Establecer ancho mínimo fijo para evitar que otros grupos se contraigan
+        // Basado en el tamaño típico cuando está expandido con todos los controles
+        m_settingsGroup->setMinimumWidth(SETTINGS_GROUP_WIDTH); // Ancho conservador para settings expandido
+        m_settingsGroup->setMaximumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsLayout->setContentsMargins(0, 0, 0, 0);
+        m_settingsLayout->setSpacing(0);
+        // Hide all settings widgets initially
+        m_userInput->hide();
+        m_passwordInput->hide();
+        m_saveCredentialsButton->hide();
+        m_downloadFolderInput->hide();
+        m_browseFolderButton->hide();
+        m_toolsButton->hide();
+    }
+
+    // Force style refresh to apply new property
+    m_settingsGroup->style()->unpolish(m_settingsGroup);
+    m_settingsGroup->style()->polish(m_settingsGroup);
+}
+
+void MainWindow::onToolsStatusChangedForInitialState(bool allInstalled)
+{
+    // Si las herramientas no están instaladas, asegurar que settings esté expandido
+    if (!allInstalled && !m_settingsExpanded) {
+        m_settingsExpanded = true;
+
+        m_settingsGroup->setTitle("Settings ⌄");
+        m_settingsGroup->setProperty("collapsed", false);
+        m_settingsGroup->setFixedHeight(QWIDGETSIZE_MAX);
+        m_settingsGroup->setMinimumHeight(0);
+        m_settingsGroup->setMaximumHeight(QWIDGETSIZE_MAX);
+        // Mantener ancho consistente cuando está expandido
+        m_settingsGroup->setMinimumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsGroup->setMaximumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsLayout->setContentsMargins(3, 2, 3, 3);
+        m_settingsLayout->setSpacing(8);
+
+        // Show all settings widgets
+        m_userInput->show();
+        m_passwordInput->show();
+        m_saveCredentialsButton->show();
+        m_downloadFolderInput->show();
+        m_browseFolderButton->show();
+        m_toolsButton->show();
+
+        // Force style refresh to apply new property
+        m_settingsGroup->style()->unpolish(m_settingsGroup);
+        m_settingsGroup->style()->polish(m_settingsGroup);
+
+        // Adjust window size after expanding settings
+        QTimer::singleShot(100, this, &MainWindow::adjustWindowSize);
     }
 }
 
@@ -600,9 +728,9 @@ void MainWindow::onSettingsToggleClicked()
         m_settingsGroup->setFixedHeight(QWIDGETSIZE_MAX); // Permitir que se expanda
         m_settingsGroup->setMinimumHeight(0); // Sin altura mínima
         m_settingsGroup->setMaximumHeight(QWIDGETSIZE_MAX); // Sin límite máximo
-        // Reset width constraints when expanding
-        m_settingsGroup->setMinimumWidth(0);
-        m_settingsGroup->setMaximumWidth(QWIDGETSIZE_MAX);
+        // Mantener ancho consistente cuando está expandido también
+        m_settingsGroup->setMinimumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsGroup->setMaximumWidth(SETTINGS_GROUP_WIDTH);
         m_settingsLayout->setContentsMargins(3, 2, 3, 3); // Márgenes consistentes con CSS
         m_settingsLayout->setSpacing(8); // Espaciado normal
         // Show all settings widgets
@@ -613,15 +741,12 @@ void MainWindow::onSettingsToggleClicked()
         m_browseFolderButton->show();
         m_toolsButton->show();
     } else {
-        // Capturar el ancho actual ANTES de ocultar los widgets
-        int expandedWidth = m_settingsGroup->width();
-
         m_settingsGroup->setTitle("Settings >");
         m_settingsGroup->setProperty("collapsed", true); // Collapsed
         m_settingsGroup->setFixedHeight(35); // Altura compacta
-        // Fijar el mismo ancho que tenía cuando estaba expandido
-        m_settingsGroup->setMinimumWidth(expandedWidth);
-        m_settingsGroup->setMaximumWidth(expandedWidth);
+        // Usar ancho fijo consistente para mantener el layout estable
+        m_settingsGroup->setMinimumWidth(SETTINGS_GROUP_WIDTH);
+        m_settingsGroup->setMaximumWidth(SETTINGS_GROUP_WIDTH);
         m_settingsLayout->setContentsMargins(0, 0, 0, 0); // Sin márgenes cuando colapsado
         m_settingsLayout->setSpacing(0); // No spacing between widgets
         // Hide all settings widgets
