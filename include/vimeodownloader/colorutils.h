@@ -9,6 +9,7 @@ class ColorUtils
 public:
     // Colores del tema oscuro de PipeSync
     static const QString BG_PRINCIPAL;
+    static const QString BG_SECCION;
     static const QString TXT_PRINCIPAL;
     static const QString BOTON_GRIS_OSCURO;
     static const QString BOTON_GRIS_OSCU_HOVER;

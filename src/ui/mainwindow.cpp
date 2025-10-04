@@ -66,8 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     
     // Configurar ventana
     setWindowTitle("Vimeo Downloader - LGA");
-    setMinimumSize(550, 580);
-    resize(650, 620);
+    adjustWindowSize();
     
     // Centrar ventana en pantalla
     move(QApplication::primaryScreen()->geometry().center() - frameGeometry().center());
@@ -609,4 +608,25 @@ QString MainWindow::getConfigPath() const
     }
     
     return appDataPath + "/config.ini";
+}
+
+void MainWindow::adjustWindowSize()
+{
+    // Forzar el cálculo del tamaño de todos los widgets
+    m_centralWidget->adjustSize();
+    
+    // Obtener el tamaño sugerido por el layout
+    QSize sizeHint = m_centralWidget->sizeHint();
+    
+    // Agregar márgenes adicionales para la ventana
+    int extraWidth = 50;  // Margen extra horizontal
+    int extraHeight = 80; // Margen extra vertical (incluye barra de título)
+    
+    // Calcular tamaño final
+    int finalWidth = qMax(550, sizeHint.width() + extraWidth);   // Mínimo 550px de ancho
+    int finalHeight = qMax(580, sizeHint.height() + extraHeight); // Mínimo 580px de alto
+    
+    // Establecer tamaño mínimo y actual
+    setMinimumSize(finalWidth, finalHeight);
+    resize(finalWidth, finalHeight);
 }

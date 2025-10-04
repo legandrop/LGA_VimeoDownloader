@@ -2,7 +2,7 @@
 
 /* Estilo general para la aplicación */
 QWidget {
-    background-color: #1d1d1d; /* Fondo principal */
+    background-color: #161616; /* Fondo principal */
     color: #b2b2b2;  /* Texto principal */
     font-family: "Inter", Arial, Helvetica, sans-serif;
     font-size: 14px;
@@ -79,7 +79,7 @@ QLineEdit {
 
 QLineEdit:focus {
     border-color: #443a91;
-    background-color: #2a2a2a;
+    background-color: #1d1d1d;
 }
 
 QLineEdit:hover {
@@ -88,12 +88,12 @@ QLineEdit:hover {
 
 /* Estilo para la ventana principal */
 QMainWindow {
-    background-color: #1d1d1d;
+    background-color: #161616;
 }
 
 /* Estilo para el widget central */
 QWidget#centralWidget {
-    background-color: #1d1d1d;
+    background-color: #161616;
     border: none;
 }
 
@@ -105,6 +105,7 @@ QGroupBox {
     margin-top: 10px;
     padding-top: 10px;
     font-weight: 500;
+    background-color: #1d1d1d;
 }
 
 QGroupBox::title {
@@ -114,12 +115,16 @@ QGroupBox::title {
     color: #b2b2b2;
 }
 
+QGroupBox QLabel {
+    background-color: #1d1d1d;
+}
+
 /* Estilo para barras de progreso */
 QProgressBar {
     border: 1px solid #555555;
     border-radius: 4px;
     text-align: center;
-    background-color: #3a3a3a;
+    background-color: #1d1d1d;
     color: #b2b2b2;
 }
 

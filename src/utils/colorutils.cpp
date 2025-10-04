@@ -1,11 +1,12 @@
 #include "vimeodownloader/colorutils.h"
 
 // Definición de colores basados en el tema actualizado
-const QString ColorUtils::BG_PRINCIPAL = "#1d1d1d";
+const QString ColorUtils::BG_PRINCIPAL = "#161616";
+const QString ColorUtils::BG_SECCION = "#1d1d1d";
 const QString ColorUtils::TXT_PRINCIPAL = "#b2b2b2";
 const QString ColorUtils::BOTON_GRIS_OSCURO = "#443a91";
 const QString ColorUtils::BOTON_GRIS_OSCU_HOVER = "#774dcb";
-const QString ColorUtils::BORDER_PRINCIPAL = "#555555";
+const QString ColorUtils::BORDER_PRINCIPAL = "#303030";
 const QString ColorUtils::ACCENT_COLOR = "#443a91";
 
 QString ColorUtils::getStyleSheet()
@@ -17,6 +18,10 @@ QString ColorUtils::getStyleSheet()
             font-family: "Inter", Arial, Helvetica, sans-serif;
             font-size: 14px;
             font-weight: 400;
+        }
+        
+        QGroupBox QLabel {
+            background-color: %7;
         }
         
         QPushButton {
@@ -42,7 +47,7 @@ QString ColorUtils::getStyleSheet()
         }
         
         QLineEdit {
-            background-color: %1;
+            background-color: %7;
             color: %2;
             border: 1px solid %5;
             border-radius: 4px;
@@ -51,7 +56,7 @@ QString ColorUtils::getStyleSheet()
         
         QLineEdit:focus {
             border-color: %6;
-            background-color: #2a2a2a;
+            background-color: %7;
         }
         
         QGroupBox {
@@ -61,6 +66,7 @@ QString ColorUtils::getStyleSheet()
             margin-top: 10px;
             padding-top: 10px;
             font-weight: 500;
+            background-color: %7;
         }
         
         QGroupBox::title {
@@ -74,7 +80,7 @@ QString ColorUtils::getStyleSheet()
             border: 1px solid %5;
             border-radius: 4px;
             text-align: center;
-            background-color: %1;
+            background-color: %7;
             color: %2;
         }
         
@@ -84,7 +90,7 @@ QString ColorUtils::getStyleSheet()
         }
         
         QTextEdit {
-            background-color: %1;
+            background-color: %7;
             color: %2;
             border: none;
             border-radius: 4px;
@@ -96,7 +102,8 @@ QString ColorUtils::getStyleSheet()
     .arg(BOTON_GRIS_OSCURO) // %3
     .arg(BOTON_GRIS_OSCU_HOVER) // %4
     .arg(BORDER_PRINCIPAL)  // %5
-    .arg(ACCENT_COLOR);     // %6
+    .arg(ACCENT_COLOR)      // %6
+    .arg(BG_SECCION);       // %7
 }
 
 QColor ColorUtils::hexToQColor(const QString &hex)

@@ -37,6 +37,7 @@ private:
     void loadSettings();
     void saveSettings();
     void checkYtDlpInstallation();
+    void adjustWindowSize();
     QString getConfigPath() const;
     
     // UI Components
