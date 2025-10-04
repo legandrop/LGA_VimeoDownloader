@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_logGroup(nullptr)
     , m_logLayout(nullptr)
     , m_logOutput(nullptr)
-    , m_logExpanded(true)
+    , m_logExpanded(false)
     , m_settingsGroup(nullptr)
     , m_settingsLayout(nullptr)
     , m_credentialsLayout(nullptr)
@@ -160,17 +160,22 @@ void MainWindow::setupUI()
     
     m_progressLayout->addLayout(m_progressButtonLayout);
     
-    // Log Group - restored to original with clickable title
-    m_logGroup = new QGroupBox("Log ⌄", this);
+    // Log Group - restored to original with clickable title (starts collapsed)
+    m_logGroup = new QGroupBox("Log >", this);
     m_logGroup->setObjectName("logGroupBox");
+    m_logGroup->setProperty("collapsed", true); // Set collapsed property for CSS
     m_logGroup->setCursor(Qt::PointingHandCursor);
+    m_logGroup->setFixedHeight(35); // Altura aumentada en 10px más
     m_logLayout = new QVBoxLayout(m_logGroup);
+    m_logLayout->setContentsMargins(0, 0, 0, 0); // Sin márgenes cuando colapsado
+    m_logLayout->setSpacing(0); // No spacing between widgets
     
     m_logOutput = new QTextEdit(this);
     m_logOutput->setReadOnly(true);
     m_logOutput->setMinimumHeight(200);
     m_logOutput->setMaximumHeight(250);
     m_logOutput->setFont(QFont("Courier", 10));
+    m_logOutput->hide(); // Start hidden
     
     m_logLayout->addWidget(m_logOutput);
     
@@ -225,6 +230,9 @@ void MainWindow::setupUI()
     m_mainLayout->addWidget(m_progressGroup);
     m_mainLayout->addWidget(m_settingsGroup);
     m_mainLayout->addWidget(m_logGroup);
+    
+    // Agregar un spacer al final para empujar todo hacia arriba cuando el log está colapsado
+    m_mainLayout->addStretch();
 }
 
 void MainWindow::setupStyles()
@@ -514,11 +522,25 @@ void MainWindow::onLogToggleClicked()
     
     if (m_logExpanded) {
         m_logGroup->setTitle("Log ⌄");
+        m_logGroup->setProperty("collapsed", false); // Not collapsed
+        m_logGroup->setFixedHeight(QWIDGETSIZE_MAX); // Permitir que se expanda
+        m_logGroup->setMinimumHeight(0); // Sin altura mínima
+        m_logGroup->setMaximumHeight(QWIDGETSIZE_MAX); // Sin límite máximo
+        m_logLayout->setContentsMargins(3, 2, 3, 3); // Márgenes consistentes con CSS
+        m_logLayout->setSpacing(2); // Espaciado pequeño entre widgets
         m_logOutput->show();
     } else {
-        m_logGroup->setTitle("Log ⌃");
+        m_logGroup->setTitle("Log >");
+        m_logGroup->setProperty("collapsed", true); // Collapsed
+        m_logGroup->setFixedHeight(35); // Altura aumentada en 10px más
+        m_logLayout->setContentsMargins(0, 0, 0, 0); // Sin márgenes cuando colapsado
+        m_logLayout->setSpacing(0); // No spacing between widgets
         m_logOutput->hide();
     }
+    
+    // Force style refresh to apply new property
+    m_logGroup->style()->unpolish(m_logGroup);
+    m_logGroup->style()->polish(m_logGroup);
     
     // Adjust window size after toggling
     QTimer::singleShot(50, this, &MainWindow::adjustWindowSize);
@@ -532,13 +554,23 @@ void MainWindow::adjustWindowSize()
     // Obtener el tamaño sugerido por el layout
     QSize sizeHint = m_centralWidget->sizeHint();
     
-    // Agregar márgenes adicionales para la ventana
-    int extraWidth = 50;  // Margen extra horizontal
-    int extraHeight = 80; // Margen extra vertical (incluye barra de título)
+    // Reducir significativamente el margen extra - el problema estaba aquí
+    int extraWidth = 20;  // Margen extra horizontal reducido
+    int extraHeight = 0; // Margen extra vertical reducido (solo para barra de título)
     
-    // Calcular tamaño final
-    int finalWidth = qMax(550, sizeHint.width() + extraWidth);   // Mínimo 550px de ancho
-    int finalHeight = qMax(380, sizeHint.height() + extraHeight); // Mínimo más bajo para cuando log está colapsado
+    // Calcular tamaño final usando principalmente el sizeHint del layout
+    int finalWidth = qMax(550, sizeHint.width() + extraWidth);
+    int finalHeight;
+    
+    if (m_logExpanded) {
+        // Cuando el log está expandido, usar el tamaño sugerido con margen mínimo
+        finalHeight = sizeHint.height() + extraHeight;
+        finalHeight = qMax(500, finalHeight); // Mínimo razonable para expandido
+    } else {
+        // Cuando el log está colapsado, usar el tamaño sugerido con margen mínimo
+        finalHeight = sizeHint.height() + extraHeight;
+        finalHeight = qMax(350, finalHeight); // Mínimo más bajo para colapsado
+    }
     
     // Establecer tamaño mínimo y actual
     setMinimumSize(finalWidth, finalHeight);
