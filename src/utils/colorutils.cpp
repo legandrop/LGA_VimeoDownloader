@@ -86,7 +86,7 @@ QString ColorUtils::getStyleSheet()
         QTextEdit {
             background-color: %1;
             color: %2;
-            border: 1px solid %5;
+            border: none;
             border-radius: 4px;
             padding: 4px;
         }
