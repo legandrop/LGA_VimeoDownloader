@@ -113,9 +113,15 @@ void MainWindow::setupUI()
     m_mainLayout = new QVBoxLayout(m_centralWidget);
     m_mainLayout->setSpacing(16);
     m_mainLayout->setContentsMargins(20, 20, 20, 20);
+
+    // Establecer restricción fija para evitar redimensionamiento automático
+    // cuando cambie la visibilidad de widgets internos (como el log)
+    m_mainLayout->setSizeConstraint(QLayout::SetFixedSize);
     
     // Video URL Group
     m_inputGroup = new QGroupBox("Video URL", this);
+    // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
+    m_inputGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     m_inputLayout = new QVBoxLayout(m_inputGroup);
     m_inputLayout->setSpacing(8);
     
@@ -137,6 +143,8 @@ void MainWindow::setupUI()
     
     // Progress Group
     m_progressGroup = new QGroupBox("Progress (0/0)", this);
+    // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
+    m_progressGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     m_progressLayout = new QVBoxLayout(m_progressGroup);
     m_progressLayout->setSpacing(8);
     
@@ -181,6 +189,8 @@ void MainWindow::setupUI()
     
     // Settings Group
     m_settingsGroup = new QGroupBox("Settings", this);
+    // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
+    m_settingsGroup->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     m_settingsLayout = new QVBoxLayout(m_settingsGroup);
     m_settingsLayout->setSpacing(8);
     
@@ -218,7 +228,12 @@ void MainWindow::setupUI()
     m_toolsButton->setEnabled(false);
     m_toolsButton->setFixedWidth(110);
     
-    m_toolsLayout->addStretch(); // Push button to the right
+    // Usar un widget spacer fijo en lugar de addStretch() para evitar recálculos
+    QWidget *spacer = new QWidget(this);
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    spacer->setFixedHeight(0);
+    
+    m_toolsLayout->addWidget(spacer);
     m_toolsLayout->addWidget(m_toolsButton);
     
     m_settingsLayout->addLayout(m_credentialsLayout);
@@ -550,29 +565,29 @@ void MainWindow::adjustWindowSize()
 {
     // Forzar el cálculo del tamaño de todos los widgets
     m_centralWidget->adjustSize();
-    
+
     // Obtener el tamaño sugerido por el layout
     QSize sizeHint = m_centralWidget->sizeHint();
-    
-    // Reducir significativamente el margen extra - el problema estaba aquí
-    int extraWidth = 20;  // Margen extra horizontal reducido
-    int extraHeight = 0; // Margen extra vertical reducido (solo para barra de título)
-    
-    // Calcular tamaño final usando principalmente el sizeHint del layout
+
+    // El layout tiene restricción fija, así que establecemos el tamaño manualmente
+    int extraWidth = 20;
     int finalWidth = qMax(550, sizeHint.width() + extraWidth);
+
+    // Calcular altura según el estado del log
     int finalHeight;
-    
     if (m_logExpanded) {
-        // Cuando el log está expandido, usar el tamaño sugerido con margen mínimo
-        finalHeight = sizeHint.height() + extraHeight;
-        finalHeight = qMax(500, finalHeight); // Mínimo razonable para expandido
+        // Cuando el log está expandido, usar altura completa
+        finalHeight = sizeHint.height();
+        finalHeight = qMax(600, finalHeight); // Mínimo para expandido
     } else {
-        // Cuando el log está colapsado, usar el tamaño sugerido con margen mínimo
-        finalHeight = sizeHint.height() + extraHeight;
-        finalHeight = qMax(350, finalHeight); // Mínimo más bajo para colapsado
+        // Cuando el log está colapsado, usar altura compacta
+        finalHeight = sizeHint.height();
+        finalHeight = qMax(380, finalHeight); // Mínimo para colapsado
     }
-    
-    // Establecer tamaño mínimo y actual
+
+    // Establecer tamaño fijo (la restricción del layout evita cambios automáticos)
+    setFixedSize(finalWidth, finalHeight);
+
+    // También actualizar el tamaño mínimo por si acaso
     setMinimumSize(finalWidth, finalHeight);
-    resize(finalWidth, finalHeight);
 }
