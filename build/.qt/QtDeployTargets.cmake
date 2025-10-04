@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_VimeoDownloader_FILE /Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader)
-set(__QT_DEPLOY_TARGET_VimeoDownloader_TYPE EXECUTABLE)

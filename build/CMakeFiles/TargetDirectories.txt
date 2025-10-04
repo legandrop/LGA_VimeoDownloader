@@ -1,9 +1,0 @@
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/VimeoDownloader.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/edit_cache.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/rebuild_cache.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/list_install_components.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/install.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/install/local.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/install/strip.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/VimeoDownloader_autogen_timestamp_deps.dir
-/Users/leg4/Desktop/Codin/LGA_PipeSync_2/LGA_VimeoDownloader/build/CMakeFiles/VimeoDownloader_autogen.dir
