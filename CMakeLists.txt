@@ -70,7 +70,7 @@ set(RESOURCES
 
 # Configuración del icono para Windows
 if(WIN32)
-    set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/VimeoDownloader.ico")
+    set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.ico")
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows_icon.rc.in" "${CMAKE_CURRENT_BINARY_DIR}/windows_icon.rc" @ONLY)
     set(RESOURCES ${RESOURCES} "${CMAKE_CURRENT_BINARY_DIR}/windows_icon.rc")
 endif()
@@ -153,14 +153,14 @@ if(APPLE)
     )
     
     # Si existe un icono para macOS, configurarlo
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/VimeoDownloader.icns")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.icns")
         set_target_properties(${PROJECT_NAME} PROPERTIES
-            MACOSX_BUNDLE_ICON_FILE "VimeoDownloader.icns"
+            MACOSX_BUNDLE_ICON_FILE "LGA_VimeoDownloader.icns"
         )
         # Copiar el icono al bundle
-        set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/VimeoDownloader.icns" 
+        set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.icns"
             PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/VimeoDownloader.icns")
+        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.icns")
     endif()
 endif()
 

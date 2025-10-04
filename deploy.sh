@@ -44,6 +44,12 @@ cd ..
 mkdir -p deploy/VimeoDownloader.app/Contents/{MacOS,Resources,Frameworks}
 cp build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader deploy/VimeoDownloader.app/Contents/MacOS/
 
+# Copiar el ícono al bundle si existe
+if [ -f "resources/icons/LGA_VimeoDownloader.icns" ]; then
+    echo "Copiando ícono al bundle..."
+    cp resources/icons/LGA_VimeoDownloader.icns deploy/VimeoDownloader.app/Contents/Resources/
+fi
+
 # Crear Info.plist con configuración mejorada de compatibilidad
 cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
 <?xml version="1.0" encoding="UTF-8"?>
@@ -52,6 +58,8 @@ cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
 <dict>
     <key>CFBundleExecutable</key>
     <string>VimeoDownloader</string>
+    <key>CFBundleIconFile</key>
+    <string>LGA_VimeoDownloader</string>
     <key>CFBundleIdentifier</key>
     <string>com.lga.vimeodownloader</string>
     <key>CFBundleName</key>
