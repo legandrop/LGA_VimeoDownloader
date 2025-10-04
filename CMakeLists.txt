@@ -80,6 +80,7 @@ set(SOURCES
     src/main.cpp
     src/ui/mainwindow.cpp
     src/core/downloader.cpp
+    src/core/downloadqueue.cpp
     src/utils/colorutils.cpp
     src/utils/toolsmanager.cpp
 )
@@ -90,6 +91,8 @@ set(HEADERS
     include/vimeodownloader/downloader.h
     include/vimeodownloader/colorutils.h
     include/vimeodownloader/toolsmanager.h
+    include/vimeodownloader/downloadqueue.h
+    include/vimeodownloader/downloaditem.h
 )
 
 # Archivos de UI (comentado por ahora, no usamos archivos .ui)

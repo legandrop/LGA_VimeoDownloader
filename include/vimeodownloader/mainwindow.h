@@ -13,6 +13,7 @@
 #include <QSettings>
 
 class ToolsManager;
+class DownloadQueue;
 
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
@@ -31,6 +32,11 @@ private slots:
     void onSaveCredentialsClicked();
     void onBrowseFolderClicked();
     void onToolsStatusChanged(bool allInstalled);
+    void onDownloadStarted();
+    void onDownloadCompleted();
+    void onQueueStatusChanged(int current, int total);
+    void onDownloadAddedToQueue(int totalCount);
+    void onCancelClicked();
 
 private:
     void setupUI();
@@ -55,7 +61,10 @@ private:
     
     QGroupBox *m_progressGroup;
     QVBoxLayout *m_progressLayout;
+    QHBoxLayout *m_progressButtonLayout;
     QProgressBar *m_progressBar;
+    QLabel *m_progressLabel;
+    QPushButton *m_cancelButton;
     
     QGroupBox *m_logGroup;
     QVBoxLayout *m_logLayout;
@@ -82,6 +91,9 @@ private:
     
     // Tools manager
     ToolsManager *m_toolsManager;
+    
+    // Download queue
+    DownloadQueue *m_downloadQueue;
 };
 
 #endif // MAINWINDOW_H

@@ -2,6 +2,7 @@
 #include "vimeodownloader/downloader.h"
 #include "vimeodownloader/colorutils.h"
 #include "vimeodownloader/toolsmanager.h"
+#include "vimeodownloader/downloadqueue.h"
 
 #include <QApplication>
 #include <QVBoxLayout>
@@ -42,7 +43,10 @@ MainWindow::MainWindow(QWidget *parent)
     , m_downloadButton(nullptr)
     , m_progressGroup(nullptr)
     , m_progressLayout(nullptr)
+    , m_progressButtonLayout(nullptr)
     , m_progressBar(nullptr)
+    , m_progressLabel(nullptr)
+    , m_cancelButton(nullptr)
     , m_logGroup(nullptr)
     , m_logLayout(nullptr)
     , m_logOutput(nullptr)
@@ -59,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_toolsButton(nullptr)
     , m_settings(nullptr)
     , m_toolsManager(nullptr)
+    , m_downloadQueue(nullptr)
 {
     // Inicializar configuración
     m_settings = new QSettings(getConfigPath(), QSettings::IniFormat, this);
@@ -73,6 +78,13 @@ MainWindow::MainWindow(QWidget *parent)
     m_toolsManager = new ToolsManager(m_logOutput, m_toolsButton, this);
     connect(m_toolsManager, &ToolsManager::toolsStatusChanged, this, &MainWindow::onToolsStatusChanged);
     m_toolsManager->checkToolsInstallation();
+    
+    // Initialize download queue
+    m_downloadQueue = new DownloadQueue(m_logOutput, m_progressBar, m_progressGroup, this);
+    connect(m_downloadQueue, &DownloadQueue::downloadStarted, this, &MainWindow::onDownloadStarted);
+    connect(m_downloadQueue, &DownloadQueue::downloadCompleted, this, &MainWindow::onDownloadCompleted);
+    connect(m_downloadQueue, &DownloadQueue::queueStatusChanged, this, &MainWindow::onQueueStatusChanged);
+    connect(m_downloadQueue, &DownloadQueue::downloadAddedToQueue, this, &MainWindow::onDownloadAddedToQueue);
     
     // Configurar ventana
     setWindowTitle("Vimeo Downloader - LGA");
@@ -121,14 +133,29 @@ void MainWindow::setupUI()
     m_inputLayout->addLayout(m_urlLayout);
     
     // Progress Group
-    m_progressGroup = new QGroupBox("Progress", this);
+    m_progressGroup = new QGroupBox("Progress (0/0)", this);
     m_progressLayout = new QVBoxLayout(m_progressGroup);
     m_progressLayout->setSpacing(8);
     
+    // Progress bar and cancel button in same line (like URL layout)
+    m_progressButtonLayout = new QHBoxLayout();
     m_progressBar = new QProgressBar(this);
-    m_progressBar->setVisible(false);
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
+    m_progressBar->setTextVisible(false); // Hide percentage text when inactive
     
-    m_progressLayout->addWidget(m_progressBar);
+    m_cancelButton = new QPushButton("Cancel", this);
+    m_cancelButton->setObjectName("cancelButton");
+    m_cancelButton->setFixedWidth(100); // Same width as download button
+    // No danger class - same color as other buttons
+    
+    m_progressButtonLayout->addWidget(m_progressBar);
+    m_progressButtonLayout->addWidget(m_cancelButton);
+    
+    // Store reference to the group box title for updates
+    m_progressLabel = nullptr; // We'll use the group box title instead
+    
+    m_progressLayout->addLayout(m_progressButtonLayout);
     
     // Log Group
     m_logGroup = new QGroupBox("Log", this);
@@ -211,6 +238,9 @@ void MainWindow::setupStyles()
     
     style()->unpolish(m_toolsButton);
     style()->polish(m_toolsButton);
+    
+    style()->unpolish(m_cancelButton);
+    style()->polish(m_cancelButton);
 }
 
 void MainWindow::setupConnections()
@@ -220,6 +250,7 @@ void MainWindow::setupConnections()
     connect(m_downloadButton, &QPushButton::clicked, this, &MainWindow::onDownloadClicked);
     connect(m_saveCredentialsButton, &QPushButton::clicked, this, &MainWindow::onSaveCredentialsClicked);
     connect(m_browseFolderButton, &QPushButton::clicked, this, &MainWindow::onBrowseFolderClicked);
+    connect(m_cancelButton, &QPushButton::clicked, this, &MainWindow::onCancelClicked);
 }
 
 void MainWindow::onDownloadClicked()
@@ -255,90 +286,11 @@ void MainWindow::onDownloadClicked()
         return;
     }
     
-    // Show progress
-    m_progressBar->setVisible(true);
-    m_progressBar->setRange(0, 100); // Set range for percentage
-    m_progressBar->setValue(0); // Start at 0%
-    m_downloadButton->setEnabled(false);
+    // Add to download queue
+    m_downloadQueue->addDownload(url, user, password, downloadDir);
     
-    // Initial log
-    m_logOutput->append(QString("=== Starting Download ==="));
-    m_logOutput->append(QString("URL: %1").arg(url));
-    m_logOutput->append(QString("User: %1").arg(user));
-    m_logOutput->append(QString("Download Folder: %1").arg(downloadDir));
-    m_logOutput->append("---");
-    
-    // Execute yt-dlp with credentials
-    QProcess *process = new QProcess(this);
-    
-    // yt-dlp arguments
-    QStringList arguments;
-    arguments << "-u" << user;
-    arguments << "-p" << password;
-    arguments << "--output" << downloadDir + "/%(title)s.%(ext)s";
-    arguments << "--format" << "best"; // Use best available format
-    arguments << url;
-    
-    // Conectar señales del proceso
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        QByteArray data = process->readAllStandardOutput();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            m_logOutput->append(output);
-            
-            // Parse progress from yt-dlp output
-            // Look for patterns like: [download]  21.6% of  654.62MiB at    4.83MiB/s ETA 01:46
-            QRegularExpression progressRegex("\\[download\\]\\s+(\\d+(?:\\.\\d+)?)%");
-            QRegularExpressionMatch match = progressRegex.match(output);
-            if (match.hasMatch()) {
-                bool ok;
-                double progress = match.captured(1).toDouble(&ok);
-                if (ok) {
-                    m_progressBar->setValue(static_cast<int>(progress));
-                }
-            }
-            
-            // Check for completion
-            if (output.contains("100% of") && output.contains("in ")) {
-                m_progressBar->setValue(100);
-            }
-        }
-    });
-    
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        QByteArray data = process->readAllStandardError();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            m_logOutput->append("ERROR: " + output);
-        }
-    });
-    
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-        m_progressBar->setVisible(false);
-        m_downloadButton->setEnabled(true);
-        
-        if (exitStatus == QProcess::CrashExit) {
-            m_logOutput->append("ERROR: yt-dlp process crashed unexpectedly");
-        } else if (exitCode == 0) {
-            m_logOutput->append("=== Download completed successfully ===");
-        } else {
-            m_logOutput->append(QString("ERROR: yt-dlp finished with error code: %1").arg(exitCode));
-        }
-        
-        process->deleteLater();
-    });
-    
-    // Start the process
-    m_logOutput->append(QString("Executing: yt-dlp %1").arg(arguments.join(" ").replace(password, "***")));
-    process->start("yt-dlp", arguments);
-    
-    if (!process->waitForStarted(5000)) {
-        m_progressBar->setVisible(false);
-        m_downloadButton->setEnabled(true);
-        m_logOutput->append("ERROR: Could not start yt-dlp. Verify it's installed.");
-        process->deleteLater();
-    }
+    // Clear URL input for next download
+    m_urlInput->clear();
 }
 
 void MainWindow::onUrlChanged()
@@ -359,6 +311,51 @@ void MainWindow::onToolsStatusChanged(bool allInstalled)
 {
     // Update download button state when tools status changes
     onUrlChanged();
+}
+
+void MainWindow::onDownloadStarted()
+{
+    // Disable download button while downloading
+    m_downloadButton->setEnabled(false);
+}
+
+void MainWindow::onDownloadCompleted()
+{
+    // Re-enable download button after download completes
+    onUrlChanged(); // This will check all conditions and enable if appropriate
+}
+
+void MainWindow::onQueueStatusChanged(int current, int total)
+{
+    // Update progress group title
+    m_progressGroup->setTitle(QString("Progress (%1/%2)").arg(current).arg(total));
+}
+
+void MainWindow::onDownloadAddedToQueue(int totalCount)
+{
+    // When a download is added, only update the total count, keep current number unchanged
+    QString currentTitle = m_progressGroup->title();
+    QRegularExpression regex("Progress \\((\\d+)/(\\d+)\\)");
+    QRegularExpressionMatch match = regex.match(currentTitle);
+    
+    int currentNumber = 0;
+    if (match.hasMatch()) {
+        currentNumber = match.captured(1).toInt();
+    }
+    
+    // Update only the total count, keep current number
+    m_progressGroup->setTitle(QString("Progress (%1/%2)").arg(currentNumber).arg(totalCount));
+}
+
+void MainWindow::onCancelClicked()
+{
+    if (m_downloadQueue) {
+        // Reset entire queue and all counters
+        m_downloadQueue->resetQueue();
+        
+        // Re-enable download button
+        onUrlChanged();
+    }
 }
 
 void MainWindow::onSaveCredentialsClicked()

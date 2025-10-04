@@ -1,15 +1,18 @@
 # VimeoDownloader
 
-Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo usando yt-dlp.
+Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube usando yt-dlp con sistema de cola de descargas.
 
 ## Características
 
 - **Interfaz gráfica moderna** con tema oscuro (basado en el estilo de PipeSync)
-- **Soporte para URLs de Vimeo** con validación en tiempo real
-- **Descarga usando yt-dlp** con credenciales de usuario
-- **Detección automática de yt-dlp** - instala o actualiza automáticamente
+- **Soporte para URLs de Vimeo y YouTube** con validación en tiempo real
+- **Sistema de cola de descargas** - procesa múltiples descargas secuencialmente
+- **Contador persistente** - rastrea descargas completadas durante la sesión
+- **Descarga usando yt-dlp + ffmpeg** con credenciales de usuario
+- **Detección automática de herramientas** - instala o actualiza yt-dlp y ffmpeg automáticamente
 - **Configuración persistente** - guarda credenciales de Vimeo de forma segura
 - **Log en tiempo real** - muestra todo el proceso de descarga
+- **Control total de cola** - botón Cancel para resetear todo
 - **Compatible con macOS y Windows**
 - **Aplicación completamente portable**
 
@@ -17,8 +20,17 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo usando yt-
 
 ### Para usar la aplicación:
 - yt-dlp instalado en el sistema
+- ffmpeg instalado en el sistema (requerido para YouTube)
   ```bash
-  pip install yt-dlp
+  # macOS (automático via app)
+  brew install yt-dlp ffmpeg
+  
+  # Windows (automático via app para yt-dlp, manual para ffmpeg)
+  # La app descarga yt-dlp automáticamente
+  # ffmpeg debe instalarse manualmente
+  
+  # Linux (manual)
+  sudo apt install yt-dlp ffmpeg  # Ubuntu/Debian
   ```
 
 ### Para compilar:
@@ -55,9 +67,9 @@ VimeoDownloader/
 ├── include/                # Archivos de cabecera (.h)
 │   └── vimeodownloader/
 ├── src/                    # Código fuente (.cpp)
-│   ├── core/               # Lógica de descarga
+│   ├── core/               # Lógica de descarga y cola
 │   ├── ui/                 # Interfaz de usuario
-│   └── utils/              # Utilidades
+│   └── utils/              # Utilidades y gestión de herramientas
 ├── resources/              # Recursos (estilos, iconos)
 │   ├── styles/
 │   └── icons/
@@ -75,13 +87,15 @@ VimeoDownloader/
 3. **Configura la carpeta de descarga**:
    - Ingresa la ruta de descarga o usa "Browse" para seleccionar
    - Haz clic en "Save" para guardar la configuración
-4. **Instala yt-dlp** (si no está instalado):
-   - Haz clic en "Install yt-dlp" para instalarlo automáticamente
-   - Si ya está instalado, usa "Update yt-dlp" para actualizarlo
+4. **Instala herramientas** (si no están instaladas):
+   - Haz clic en "Install Tools" para instalar yt-dlp y ffmpeg automáticamente
+   - Si ya están instaladas, usa "Update Tools" para actualizarlas
 5. **Descarga videos**:
-   - Ingresa una URL válida de Vimeo
-   - Haz clic en "Download" (se habilita cuando todo está configurado)
-   - Monitorea el progreso en la sección de Log
+   - Ingresa una URL válida de Vimeo o YouTube
+   - Haz clic en "Download" para agregar a la cola (se habilita cuando todo está configurado)
+   - Puedes agregar múltiples URLs - se procesarán secuencialmente
+   - Monitorea el progreso en la sección Progress y Log
+   - Usa "Cancel" para cancelar toda la cola y resetear contadores
 
 ### Configuración
 
@@ -93,24 +107,32 @@ La aplicación guarda las credenciales de Vimeo en:
 
 La aplicación tiene 4 secciones principales:
 
-1. **Video URL**: Campo de entrada para URL de Vimeo + botón Download
-2. **Progress**: Barra de progreso y estado actual
-3. **Download Log**: Terminal en tiempo real con todo el proceso
-4. **Settings**: Configuración en 2 filas:
+1. **Video URL**: Campo de entrada para URL de Vimeo/YouTube + botón Download
+2. **Progress**: Contador de cola (actual/total) + barra de progreso + botón Cancel
+3. **Settings**: Configuración en 3 filas:
    - Fila 1: `Username | Password | Save`
-   - Fila 2: `Download Folder | Browse | Save | yt-dlp Button`
+   - Fila 2: `Download Folder | Browse`
+   - Fila 3: `Tools Button` (Install/Update Tools)
+4. **Log**: Terminal en tiempo real con todo el proceso de cola
 
 ### Comando equivalente
 
 La aplicación ejecuta internamente:
 ```bash
-yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "best[height<=720]" "URL_DE_VIMEO"
+yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "best" "URL_DE_VIMEO_O_YOUTUBE"
 ```
 
-### Actualización de yt-dlp
+### Sistema de Cola de Descargas
 
-- Si yt-dlp está instalado: usa `yt-dlp -U` para actualizar
-- Si no está instalado: usa `pip install yt-dlp` para instalar
+La aplicación incluye un sistema de cola avanzado:
+
+- **Cola secuencial**: Las descargas se procesan una por una
+- **Contador persistente**: Formato (actual/total) que persiste durante la sesión
+- **Control total**: Botón Cancel resetea toda la cola a (0/0)
+- **Auto-inicio**: La cola comienza automáticamente al agregar elementos
+- **Feedback visual**: Barra de progreso siempre visible, activa durante descargas
+
+Para más detalles, consulta: [DOWNLOAD_QUEUE_SYSTEM.md](DOWNLOAD_QUEUE_SYSTEM.md)
 
 ## Notas de Desarrollo
 
