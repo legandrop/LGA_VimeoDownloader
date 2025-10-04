@@ -68,7 +68,98 @@ void ToolsManager::checkYtDlpInstallation()
     return;
 #endif
     
-    // macOS/Linux: Check via PATH
+#ifdef Q_OS_MAC
+    // macOS: Check in common Homebrew locations first, then PATH
+    QStringList possiblePaths = {
+        "/opt/homebrew/bin/yt-dlp",  // Apple Silicon Homebrew
+        "/usr/local/bin/yt-dlp",    // Intel Homebrew
+        "yt-dlp"                    // System PATH (fallback)
+    };
+    
+    QString foundPath;
+    for (const QString &path : possiblePaths) {
+        if (path == "yt-dlp") {
+            // Try PATH version
+            break;
+        } else if (QFile::exists(path)) {
+            foundPath = path;
+            break;
+        }
+    }
+    
+    if (!foundPath.isEmpty()) {
+        // Found in Homebrew location, verify it works
+        m_pendingProcesses++;
+        QProcess *process = new QProcess(this);
+        
+        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                [this, process, foundPath](int exitCode, QProcess::ExitStatus exitStatus) {
+            
+            if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                m_ytDlpInstalled = true;
+                logMessage(QString("✓ yt-dlp found at: %1").arg(foundPath));
+            } else {
+                m_ytDlpInstalled = false;
+                logMessage("✗ yt-dlp found but not working properly");
+            }
+            
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            
+            process->deleteLater();
+        });
+        
+        process->start(foundPath, QStringList() << "--version");
+        
+        if (!process->waitForStarted(3000)) {
+            m_ytDlpInstalled = false;
+            logMessage("✗ yt-dlp found but failed to start");
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            process->deleteLater();
+        }
+    } else {
+        // Fallback to PATH check
+        m_pendingProcesses++;
+        QProcess *process = new QProcess(this);
+        
+        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
+            
+            if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                m_ytDlpInstalled = true;
+                logMessage("✓ yt-dlp is installed and available");
+            } else {
+                m_ytDlpInstalled = false;
+                logMessage("✗ yt-dlp is not installed");
+            }
+            
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            
+            process->deleteLater();
+        });
+        
+        process->start("yt-dlp", QStringList() << "--version");
+        
+        if (!process->waitForStarted(3000)) {
+            m_ytDlpInstalled = false;
+            logMessage("✗ yt-dlp is not installed");
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            process->deleteLater();
+        }
+    }
+#else
+    // Linux: Check via PATH
     m_pendingProcesses++;
     QProcess *process = new QProcess(this);
     
@@ -103,6 +194,7 @@ void ToolsManager::checkYtDlpInstallation()
         }
         process->deleteLater();
     }
+#endif
 }
 
 void ToolsManager::checkFfmpegInstallation()
@@ -127,7 +219,98 @@ void ToolsManager::checkFfmpegInstallation()
     return;
 #endif
     
-    // macOS/Linux: Check via PATH
+#ifdef Q_OS_MAC
+    // macOS: Check in common Homebrew locations first, then PATH
+    QStringList possiblePaths = {
+        "/opt/homebrew/bin/ffmpeg",  // Apple Silicon Homebrew
+        "/usr/local/bin/ffmpeg",    // Intel Homebrew
+        "ffmpeg"                    // System PATH (fallback)
+    };
+    
+    QString foundPath;
+    for (const QString &path : possiblePaths) {
+        if (path == "ffmpeg") {
+            // Try PATH version
+            break;
+        } else if (QFile::exists(path)) {
+            foundPath = path;
+            break;
+        }
+    }
+    
+    if (!foundPath.isEmpty()) {
+        // Found in Homebrew location, verify it works
+        m_pendingProcesses++;
+        QProcess *process = new QProcess(this);
+        
+        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                [this, process, foundPath](int exitCode, QProcess::ExitStatus exitStatus) {
+            
+            if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                m_ffmpegInstalled = true;
+                logMessage(QString("✓ ffmpeg found at: %1").arg(foundPath));
+            } else {
+                m_ffmpegInstalled = false;
+                logMessage("✗ ffmpeg found but not working properly");
+            }
+            
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            
+            process->deleteLater();
+        });
+        
+        process->start(foundPath, QStringList() << "-version");
+        
+        if (!process->waitForStarted(3000)) {
+            m_ffmpegInstalled = false;
+            logMessage("✗ ffmpeg found but failed to start");
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            process->deleteLater();
+        }
+    } else {
+        // Fallback to PATH check
+        m_pendingProcesses++;
+        QProcess *process = new QProcess(this);
+        
+        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
+            
+            if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                m_ffmpegInstalled = true;
+                logMessage("✓ ffmpeg is installed and available");
+            } else {
+                m_ffmpegInstalled = false;
+                logMessage("✗ ffmpeg is not installed");
+            }
+            
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            
+            process->deleteLater();
+        });
+        
+        process->start("ffmpeg", QStringList() << "-version");
+        
+        if (!process->waitForStarted(3000)) {
+            m_ffmpegInstalled = false;
+            logMessage("✗ ffmpeg is not installed");
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            process->deleteLater();
+        }
+    }
+#else
+    // Linux: Check via PATH
     m_pendingProcesses++;
     QProcess *process = new QProcess(this);
     
@@ -162,6 +345,7 @@ void ToolsManager::checkFfmpegInstallation()
         }
         process->deleteLater();
     }
+#endif
 }
 
 void ToolsManager::updateButtonState()
@@ -294,8 +478,9 @@ void ToolsManager::installYtDlpMac()
         process->deleteLater();
     });
     
-    logMessage("Executing: brew install yt-dlp");
-    process->start("brew", QStringList() << "install" << "yt-dlp");
+    QString brewPath = getBrewPath();
+    logMessage(QString("Executing: %1 install yt-dlp").arg(brewPath));
+    process->start(brewPath, QStringList() << "install" << "yt-dlp");
     
     if (!process->waitForStarted(5000)) {
         logMessage("ERROR: Could not execute brew install");
@@ -347,8 +532,9 @@ void ToolsManager::updateYtDlpMac()
         process->deleteLater();
     });
     
-    logMessage("Executing: brew upgrade yt-dlp");
-    process->start("brew", QStringList() << "upgrade" << "yt-dlp");
+    QString brewPath = getBrewPath();
+    logMessage(QString("Executing: %1 upgrade yt-dlp").arg(brewPath));
+    process->start(brewPath, QStringList() << "upgrade" << "yt-dlp");
     
     if (!process->waitForStarted(5000)) {
         logMessage("ERROR: Could not execute brew upgrade");
@@ -399,8 +585,9 @@ void ToolsManager::installFfmpegMac()
         process->deleteLater();
     });
     
-    logMessage("Executing: brew install ffmpeg");
-    process->start("brew", QStringList() << "install" << "ffmpeg");
+    QString brewPath = getBrewPath();
+    logMessage(QString("Executing: %1 install ffmpeg").arg(brewPath));
+    process->start(brewPath, QStringList() << "install" << "ffmpeg");
     
     if (!process->waitForStarted(5000)) {
         logMessage("ERROR: Could not execute brew install ffmpeg");
@@ -451,8 +638,9 @@ void ToolsManager::updateFfmpegMac()
         process->deleteLater();
     });
     
-    logMessage("Executing: brew upgrade ffmpeg");
-    process->start("brew", QStringList() << "upgrade" << "ffmpeg");
+    QString brewPath = getBrewPath();
+    logMessage(QString("Executing: %1 upgrade ffmpeg").arg(brewPath));
+    process->start(brewPath, QStringList() << "upgrade" << "ffmpeg");
     
     if (!process->waitForStarted(5000)) {
         logMessage("ERROR: Could not execute brew upgrade ffmpeg");
@@ -582,4 +770,26 @@ void ToolsManager::setButtonStyle(const QString &styleClass)
         m_toolsButton->style()->unpolish(m_toolsButton);
         m_toolsButton->style()->polish(m_toolsButton);
     }
+}
+
+QString ToolsManager::getBrewPath() const
+{
+#ifdef Q_OS_MAC
+    // Check for Homebrew in common locations
+    QStringList possiblePaths = {
+        "/opt/homebrew/bin/brew",  // Apple Silicon Homebrew
+        "/usr/local/bin/brew"      // Intel Homebrew
+    };
+    
+    for (const QString &path : possiblePaths) {
+        if (QFile::exists(path)) {
+            return path;
+        }
+    }
+    
+    // Fallback to PATH
+    return "brew";
+#else
+    return "brew";
+#endif
 }

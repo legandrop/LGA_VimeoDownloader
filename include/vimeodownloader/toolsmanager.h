@@ -54,6 +54,7 @@ private:
     void setButtonEnabled(bool enabled);
     void setButtonText(const QString &text);
     void setButtonStyle(const QString &styleClass);
+    QString getBrewPath() const;
     
     // UI references
     QTextEdit *m_logOutput;
