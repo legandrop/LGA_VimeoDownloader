@@ -41,6 +41,7 @@ private slots:
     void onDownloadAddedToQueue(int totalCount);
     void onCancelClicked();
     void onLogToggleClicked();
+    void onSettingsToggleClicked();
 
 private:
     void setupUI();
@@ -74,9 +75,10 @@ private:
     QVBoxLayout *m_logLayout;
     QTextEdit *m_logOutput;
     bool m_logExpanded;
-    
+
     QGroupBox *m_settingsGroup;
     QVBoxLayout *m_settingsLayout;
+    bool m_settingsExpanded;
     QHBoxLayout *m_credentialsLayout;
     QHBoxLayout *m_folderLayout;
     QHBoxLayout *m_toolsLayout;
@@ -99,6 +101,9 @@ private:
     
     // Download queue
     DownloadQueue *m_downloadQueue;
+
+    // Track maximum width for consistent sizing when settings is collapsed
+    int m_maxWindowWidth;
 };
 
 #endif // MAINWINDOW_H

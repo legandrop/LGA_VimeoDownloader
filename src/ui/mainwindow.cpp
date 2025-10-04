@@ -55,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_logExpanded(false)
     , m_settingsGroup(nullptr)
     , m_settingsLayout(nullptr)
+    , m_settingsExpanded(true)
     , m_credentialsLayout(nullptr)
     , m_folderLayout(nullptr)
     , m_toolsLayout(nullptr)
@@ -67,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_settings(nullptr)
     , m_toolsManager(nullptr)
     , m_downloadQueue(nullptr)
+    , m_maxWindowWidth(0)
 {
     // Inicializar configuración
     m_settings = new QSettings(getConfigPath(), QSettings::IniFormat, this);
@@ -91,7 +93,13 @@ MainWindow::MainWindow(QWidget *parent)
     
     // Configurar ventana
     setWindowTitle("Vimeo Downloader - LGA");
+
+    // Ajustar tamaño inicial y establecer ancho máximo
     adjustWindowSize();
+    // Después del ajuste inicial, aseguramos que el ancho máximo esté establecido
+    QTimer::singleShot(200, this, [this]() {
+        adjustWindowSize();
+    });
     
     // Centrar ventana en pantalla
     move(QApplication::primaryScreen()->geometry().center() - frameGeometry().center());
@@ -189,8 +197,11 @@ void MainWindow::setupUI()
     
     m_logLayout->addWidget(m_logOutput);
     
-    // Settings Group
-    m_settingsGroup = new QGroupBox("Settings", this);
+    // Settings Group - clickable like log group (starts expanded)
+    m_settingsGroup = new QGroupBox("Settings ⌄", this);
+    m_settingsGroup->setObjectName("settingsGroupBox");
+    m_settingsGroup->setProperty("collapsed", false); // Not collapsed initially
+    m_settingsGroup->setCursor(Qt::PointingHandCursor);
     // Política de tamaño que permite ajuste mínimo pero mantiene estabilidad
     m_settingsGroup->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     m_settingsLayout = new QVBoxLayout(m_settingsGroup);
@@ -288,6 +299,9 @@ void MainWindow::setupConnections()
     
     // Install event filter for log group box to capture clicks
     m_logGroup->installEventFilter(this);
+
+    // Install event filter for settings group box to capture clicks
+    m_settingsGroup->installEventFilter(this);
 }
 
 void MainWindow::onDownloadClicked()
@@ -533,6 +547,15 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             return true;
         }
     }
+
+    if (obj == m_settingsGroup && event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            onSettingsToggleClicked();
+            return true;
+        }
+    }
+
     return QMainWindow::eventFilter(obj, event);
 }
 
@@ -566,6 +589,57 @@ void MainWindow::onLogToggleClicked()
     QTimer::singleShot(100, this, &MainWindow::adjustWindowSize);
 }
 
+void MainWindow::onSettingsToggleClicked()
+{
+    m_settingsExpanded = !m_settingsExpanded;
+
+    if (m_settingsExpanded) {
+        m_settingsGroup->setTitle("Settings ⌄");
+        m_settingsGroup->setProperty("collapsed", false); // Not collapsed
+        m_settingsGroup->setFixedHeight(QWIDGETSIZE_MAX); // Permitir que se expanda
+        m_settingsGroup->setMinimumHeight(0); // Sin altura mínima
+        m_settingsGroup->setMaximumHeight(QWIDGETSIZE_MAX); // Sin límite máximo
+        // Reset width constraints when expanding
+        m_settingsGroup->setMinimumWidth(0);
+        m_settingsGroup->setMaximumWidth(QWIDGETSIZE_MAX);
+        m_settingsLayout->setContentsMargins(3, 2, 3, 3); // Márgenes consistentes con CSS
+        m_settingsLayout->setSpacing(8); // Espaciado normal
+        // Show all settings widgets
+        m_userInput->show();
+        m_passwordInput->show();
+        m_saveCredentialsButton->show();
+        m_downloadFolderInput->show();
+        m_browseFolderButton->show();
+        m_toolsButton->show();
+    } else {
+        // Capturar el ancho actual ANTES de ocultar los widgets
+        int expandedWidth = m_settingsGroup->width();
+
+        m_settingsGroup->setTitle("Settings >");
+        m_settingsGroup->setProperty("collapsed", true); // Collapsed
+        m_settingsGroup->setFixedHeight(35); // Altura compacta
+        // Fijar el mismo ancho que tenía cuando estaba expandido
+        m_settingsGroup->setMinimumWidth(expandedWidth);
+        m_settingsGroup->setMaximumWidth(expandedWidth);
+        m_settingsLayout->setContentsMargins(0, 0, 0, 0); // Sin márgenes cuando colapsado
+        m_settingsLayout->setSpacing(0); // No spacing between widgets
+        // Hide all settings widgets
+        m_userInput->hide();
+        m_passwordInput->hide();
+        m_saveCredentialsButton->hide();
+        m_downloadFolderInput->hide();
+        m_browseFolderButton->hide();
+        m_toolsButton->hide();
+    }
+
+    // Force style refresh to apply new property
+    m_settingsGroup->style()->unpolish(m_settingsGroup);
+    m_settingsGroup->style()->polish(m_settingsGroup);
+
+    // Adjust window size after toggling with a small delay to ensure proper layout calculation
+    QTimer::singleShot(100, this, &MainWindow::adjustWindowSize);
+}
+
 void MainWindow::adjustWindowSize()
 {
     // Forzar el cálculo del tamaño de todos los widgets
@@ -576,16 +650,26 @@ void MainWindow::adjustWindowSize()
 
     // El layout tiene restricción fija, así que establecemos el tamaño manualmente
     int extraWidth = 5;
-    int finalWidth = sizeHint.width() + extraWidth;
+    int currentWidth = sizeHint.width() + extraWidth;
 
-    // Calcular altura según el estado del log
+    // Siempre mantener el ancho máximo registrado, independientemente del estado de expansión
+    if (currentWidth > m_maxWindowWidth) {
+        m_maxWindowWidth = currentWidth;
+    }
+
+    // Siempre usar el ancho máximo para evitar que las secciones se achiquen
+    int finalWidth = m_maxWindowWidth > 0 ? m_maxWindowWidth : currentWidth;
+
+    // Calcular altura según el estado del log y settings
     int finalHeight;
-    if (m_logExpanded) {
-        // Cuando el log está expandido, usar altura completa
+    bool anyExpanded = m_logExpanded || m_settingsExpanded;
+
+    if (anyExpanded) {
+        // Cuando cualquier sección está expandida, usar altura completa
         finalHeight = sizeHint.height();
         finalHeight = qMax(600, finalHeight); // Mínimo para expandido
     } else {
-        // Cuando el log está colapsado, usar altura compacta
+        // Cuando ambas secciones están colapsadas, usar altura compacta
         finalHeight = sizeHint.height();
         finalHeight = qMax(380, finalHeight); // Mínimo para colapsado
     }
