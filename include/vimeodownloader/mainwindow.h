@@ -54,6 +54,8 @@ private:
     void adjustWindowSize();
     QString getConfigPath() const;
     bool isValidVideoUrl(const QString &url) const;
+    bool isVimeoUrl(const QString &url) const;
+    bool isValidDownloadPath(const QString &path) const;
     bool shouldShowSettingsExpanded();
     void setInitialSettingsState();
     

@@ -149,7 +149,7 @@ void MainWindow::setupUI()
     m_urlInput->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     m_downloadButton = new QPushButton("Download", this);
-    m_downloadButton->setEnabled(true); // Temporalmente habilitado para testing
+    m_downloadButton->setEnabled(true); // Lo vamos a dejar SIEMPRE EN TRUE. NO CAMBIAR!!!!!
     m_downloadButton->setFixedWidth(110);
 
     m_urlLayout->addWidget(m_urlInput);
@@ -327,34 +327,47 @@ void MainWindow::onDownloadClicked()
     QString password = m_settings->value("vimeo/password", "").toString();
     QString downloadDir = m_settings->value("download/folder", "").toString();
     
+    // 1. Validate URL is not empty
     if (url.isEmpty()) {
         QMessageBox::warning(this, "Error", "Please enter a valid URL.");
         return;
     }
     
-    if (user.isEmpty() || password.isEmpty()) {
-        QMessageBox::warning(this, "Error", "Please save Vimeo credentials first.");
-        return;
-    }
-    
-    if (downloadDir.isEmpty()) {
-        QMessageBox::warning(this, "Error", "Please set a download folder first.");
-        return;
-    }
-    
-    // Validate video URL (Vimeo or YouTube)
+    // 2. Validate video URL (Vimeo or YouTube)
     if (!isValidVideoUrl(url)) {
         QMessageBox::warning(this, "Error", "Please enter a valid Vimeo or YouTube URL.");
         return;
     }
     
-    if (!m_toolsManager->areToolsInstalled()) {
-        QMessageBox::warning(this, "Error", "Required tools are not installed. Please install them first.");
+    // 3. Check Vimeo credentials ONLY for Vimeo URLs
+    if (isVimeoUrl(url) && (user.isEmpty() || password.isEmpty())) {
+        QMessageBox::warning(this, "Error", "Please save Vimeo credentials first for Vimeo downloads.");
         return;
     }
     
+    // 4. Validate download folder exists
+    if (downloadDir.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please set a download folder first.");
+        return;
+    }
+    
+    if (!isValidDownloadPath(downloadDir)) {
+        QMessageBox::warning(this, "Error", "Download folder does not exist or is not accessible. Please select a valid folder.");
+        return;
+    }
+    
+    // 5. Check that both tools are installed
+    if (!m_toolsManager->areToolsInstalled()) {
+        QMessageBox::warning(this, "Error", "Required tools (yt-dlp and ffmpeg) are not installed. Please install them first using the Tools button.");
+        return;
+    }
+    
+    // For YouTube URLs, use empty credentials (yt-dlp doesn't need them)
+    QString finalUser = isVimeoUrl(url) ? user : "";
+    QString finalPassword = isVimeoUrl(url) ? password : "";
+    
     // Add to download queue
-    m_downloadQueue->addDownload(url, user, password, downloadDir);
+    m_downloadQueue->addDownload(url, finalUser, finalPassword, downloadDir);
     
     // Clear URL input for next download
     m_urlInput->clear();
@@ -362,36 +375,27 @@ void MainWindow::onDownloadClicked()
 
 void MainWindow::onUrlChanged()
 {
-    QString url = m_urlInput->text().trimmed();
-    QString user = m_settings->value("vimeo/username", "").toString();
-    QString password = m_settings->value("vimeo/password", "").toString();
-    QString downloadDir = m_settings->value("download/folder", "").toString();
-    
-    bool isValidUrl = !url.isEmpty() && isValidVideoUrl(url);
-    bool hasCredentials = !user.isEmpty() && !password.isEmpty();
-    bool hasDownloadDir = !downloadDir.isEmpty();
-    
-    // Temporalmente siempre habilitado para testing - comentar esta línea después de probar
-    m_downloadButton->setEnabled(true);
-    // m_downloadButton->setEnabled(isValidUrl && hasCredentials && hasDownloadDir && m_toolsManager->areToolsInstalled());
+    // Note: This function used to enable/disable the download button based on validation
+    // Now the download button is always enabled and validation happens in onDownloadClicked()
+    // This function is kept for potential future UI updates but currently does nothing
 }
 
 void MainWindow::onToolsStatusChanged(bool allInstalled)
 {
-    // Update download button state when tools status changes
+    // Tools status changed - update UI
     onUrlChanged();
 }
 
 void MainWindow::onDownloadStarted()
 {
-    // Disable download button while downloading
-    m_downloadButton->setEnabled(false);
+    // Note: Download button remains enabled - user can queue multiple downloads
+    // m_downloadButton->setEnabled(false); // REMOVED - button always enabled
 }
 
 void MainWindow::onDownloadCompleted()
 {
-    // Re-enable download button after download completes
-    onUrlChanged(); // This will check all conditions and enable if appropriate
+    // Download completed - update UI state
+    onUrlChanged();
 }
 
 void MainWindow::onQueueStatusChanged(int current, int total)
@@ -422,7 +426,7 @@ void MainWindow::onCancelClicked()
         // Reset entire queue and all counters
         m_downloadQueue->resetQueue();
         
-        // Re-enable download button
+        // Update UI state
         onUrlChanged();
     }
 }
@@ -442,7 +446,7 @@ void MainWindow::onSaveCredentialsClicked()
     m_settings->sync();
     
     m_logOutput->append("Vimeo credentials saved successfully.");
-    onUrlChanged(); // Update button state
+    onUrlChanged();
 }
 
 
@@ -460,7 +464,7 @@ void MainWindow::onBrowseFolderClicked()
         m_settings->sync();
         
         m_logOutput->append(QString("Download folder saved: %1").arg(folder));
-        onUrlChanged(); // Update button state
+        onUrlChanged();
     }
 }
 
@@ -485,19 +489,16 @@ void MainWindow::loadSettings()
 bool MainWindow::shouldShowSettingsExpanded()
 {
     // Settings debe abrir expandido si:
-    // 1. Usuario o contraseña están vacíos (no guardados)
-    QString user = m_settings->value("vimeo/username", "").toString();
-    QString password = m_settings->value("vimeo/password", "").toString();
-    bool credentialsEmpty = user.isEmpty() || password.isEmpty();
-
-    // 2. O si la carpeta de destino está vacía
+    
+    // 1. La carpeta de destino está vacía o no es válida
     QString downloadDir = m_settings->value("download/folder", "").toString();
-    bool downloadDirEmpty = downloadDir.isEmpty();
+    bool downloadDirInvalid = downloadDir.isEmpty() || !isValidDownloadPath(downloadDir);
 
-    // 3. O si las herramientas no están instaladas
+    // 2. O si las herramientas no están instaladas
     bool toolsNotInstalled = m_toolsManager && !m_toolsManager->areToolsInstalled();
 
-    return credentialsEmpty || downloadDirEmpty || toolsNotInstalled;
+    // Note: No longer checking for Vimeo credentials here since they're only needed for Vimeo URLs
+    return downloadDirInvalid || toolsNotInstalled;
 }
 
 void MainWindow::setInitialSettingsState()
@@ -608,6 +609,25 @@ bool MainWindow::isValidVideoUrl(const QString &url) const
     }
     
     return false;
+}
+
+bool MainWindow::isVimeoUrl(const QString &url) const
+{
+    if (url.isEmpty()) {
+        return false;
+    }
+    
+    return url.contains("vimeo.com", Qt::CaseInsensitive);
+}
+
+bool MainWindow::isValidDownloadPath(const QString &path) const
+{
+    if (path.isEmpty()) {
+        return false;
+    }
+    
+    QDir dir(path);
+    return dir.exists() && dir.isReadable();
 }
 
 QString MainWindow::getConfigPath() const
