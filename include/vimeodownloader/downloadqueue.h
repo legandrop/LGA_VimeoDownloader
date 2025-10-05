@@ -83,6 +83,10 @@ private:
     int m_completedCount;
     int m_totalCount;
     bool m_hasCurrentDownload;
+    
+    // Fragment-based progress tracking for YouTube downloads
+    int m_totalFragments;
+    int m_currentFragment;
 };
 
 #endif // DOWNLOADQUEUE_H

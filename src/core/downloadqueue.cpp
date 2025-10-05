@@ -17,6 +17,8 @@ DownloadQueue::DownloadQueue(QTextEdit *logOutput, QProgressBar *progressBar, QG
     , m_completedCount(0)
     , m_totalCount(0)
     , m_hasCurrentDownload(false)
+    , m_totalFragments(0)
+    , m_currentFragment(0)
 {
     updateProgressLabel();
 }
@@ -192,6 +194,10 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     m_progressBar->setTextVisible(true);
     m_progressBar->setValue(0);
     
+    // Reset fragment tracking for new download
+    m_totalFragments = 0;
+    m_currentFragment = 0;
+    
     // Log start
     logMessage(QString("=== Starting Download %1 of %2 ===").arg(m_completedCount + 1).arg(m_totalCount));
     logMessage(QString("URL: %1").arg(item.url));
@@ -222,16 +228,57 @@ void DownloadQueue::onDownloadOutput()
     if (!output.isEmpty()) {
         logMessage(output);
         
+        // Check for total fragments info (YouTube HLS downloads)
+        QRegularExpression fragmentsRegex("\\[hlsnative\\] Total fragments: (\\d+)");
+        QRegularExpressionMatch fragmentsMatch = fragmentsRegex.match(output);
+        if (fragmentsMatch.hasMatch()) {
+            m_totalFragments = fragmentsMatch.captured(1).toInt();
+            logMessage(QString("Detected HLS download with %1 fragments").arg(m_totalFragments));
+        }
+        
         // Parse progress from yt-dlp output
-        QRegularExpression progressRegex("\\[download\\]\\s+(\\d+(?:\\.\\d+)?)%");
+        QRegularExpression progressRegex("\\[download\\]\\s+(\\d+(?:\\.\\d+)?)%.*\\(frag (\\d+)/(\\d+)\\)");
         QRegularExpressionMatch match = progressRegex.match(output);
+        
         if (match.hasMatch()) {
+            // Fragment-based progress (YouTube HLS)
             bool ok;
-            double progress = match.captured(1).toDouble(&ok);
-            if (ok) {
-                m_currentDownload.progress = static_cast<int>(progress);
-                m_progressBar->setValue(static_cast<int>(progress));
-                emit downloadProgress(static_cast<int>(progress));
+            double fragmentProgress = match.captured(1).toDouble(&ok);
+            int currentFrag = match.captured(2).toInt();
+            int totalFrag = match.captured(3).toInt();
+            
+            if (ok && totalFrag > 0) {
+                // Update fragment info if we have it
+                if (m_totalFragments == 0) {
+                    m_totalFragments = totalFrag;
+                }
+                m_currentFragment = currentFrag;
+                
+                // Calculate overall progress: (completed fragments + current fragment progress) / total fragments
+                double overallProgress = ((double)(currentFrag - 1) + (fragmentProgress / 100.0)) / (double)totalFrag * 100.0;
+                int progressInt = static_cast<int>(overallProgress);
+                
+                // Ensure progress doesn't exceed 100% and is monotonic
+                progressInt = qMin(progressInt, 100);
+                if (progressInt >= m_currentDownload.progress) {
+                    m_currentDownload.progress = progressInt;
+                    m_progressBar->setValue(progressInt);
+                    emit downloadProgress(progressInt);
+                }
+            }
+        } else {
+            // Regular progress (Vimeo or non-fragmented downloads)
+            QRegularExpression simpleProgressRegex("\\[download\\]\\s+(\\d+(?:\\.\\d+)?)%");
+            QRegularExpressionMatch simpleMatch = simpleProgressRegex.match(output);
+            if (simpleMatch.hasMatch()) {
+                bool ok;
+                double progress = simpleMatch.captured(1).toDouble(&ok);
+                if (ok) {
+                    int progressInt = static_cast<int>(progress);
+                    m_currentDownload.progress = progressInt;
+                    m_progressBar->setValue(progressInt);
+                    emit downloadProgress(progressInt);
+                }
             }
         }
         
