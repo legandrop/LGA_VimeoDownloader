@@ -184,8 +184,13 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     
     // Prepare yt-dlp arguments
     QStringList arguments;
-    arguments << "-u" << item.username;
-    arguments << "-p" << item.password;
+    
+    // Add credentials only if both username and password are provided (for Vimeo)
+    if (!item.username.isEmpty() && !item.password.isEmpty()) {
+        arguments << "-u" << item.username;
+        arguments << "-p" << item.password;
+    }
+    
     arguments << "--output" << item.downloadDir + "/%(title)s.%(ext)s";
     arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
     
@@ -214,7 +219,11 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     
     // Start process
     QString ytDlpPath = m_toolsManager->getYtDlpPath();
-    logMessage(QString("Executing: %1 %2").arg(ytDlpPath).arg(arguments.join(" ").replace(item.password, "***")));
+    QString commandLog = arguments.join(" ");
+    if (!item.password.isEmpty()) {
+        commandLog = commandLog.replace(item.password, "***");
+    }
+    logMessage(QString("Executing: %1 %2").arg(ytDlpPath).arg(commandLog));
     m_currentProcess->start(ytDlpPath, arguments);
     
     if (!m_currentProcess->waitForStarted(5000)) {

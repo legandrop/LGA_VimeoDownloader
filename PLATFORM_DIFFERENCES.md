@@ -118,13 +118,38 @@ YouTube videos often come in separate audio and video streams that need to be me
 - **Audio Stream**: Contains audio without video
 - **ffmpeg**: Merges these streams into a single playable file
 
+### YouTube vs Vimeo Differences
+
+| Feature | Vimeo | YouTube |
+|---------|-------|---------|
+| **Authentication** | Username + Password required | No credentials needed |
+| **Bot Detection** | Minimal | Requires browser cookies |
+| **Format Selection** | `bv*+ba/b` | `bv*+ba/b` |
+| **ffmpeg Location** | `--ffmpeg-location` required | `--ffmpeg-location` required |
+| **Cookies** | Not needed | `--cookies-from-browser chrome` |
+
 ### Platform-Specific YouTube Support
 
-| Platform | yt-dlp | ffmpeg | YouTube Support |
-|----------|--------|--------|-----------------|
-| macOS | ✅ Auto | ✅ Auto | ✅ Full |
-| Windows | ✅ Auto | ⚠️ Manual | ✅ Full (with manual ffmpeg) |
-| Linux | ❌ Manual | ❌ Manual | ⚠️ Manual |
+| Platform | yt-dlp | ffmpeg | YouTube Support | Notes |
+|----------|--------|--------|-----------------|-------|
+| macOS | ✅ Auto | ✅ Auto | ✅ Full | Standard videos work automatically |
+| Windows | ✅ Auto | ✅ Auto | ✅ Full | Standard videos work automatically |
+| Linux | ❌ Manual | ❌ Manual | ⚠️ Manual | Requires manual setup |
+
+### Special YouTube Videos
+
+Most YouTube videos work without any authentication. However, some videos with special restrictions may require browser cookies:
+
+- **Age-restricted content**
+- **Private or unlisted videos** 
+- **Videos with enhanced bot protection**
+
+For these cases, yt-dlp will show an error message with specific instructions like:
+```
+ERROR: Sign in to confirm you're not a bot. Use --cookies-from-browser or --cookies for authentication.
+```
+
+The application handles standard YouTube videos automatically without requiring cookies or additional setup.
 
 ---
 

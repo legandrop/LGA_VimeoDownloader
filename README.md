@@ -131,9 +131,18 @@ La aplicación tiene 4 secciones principales:
 ### Comando equivalente
 
 La aplicación ejecuta internamente:
+
+**Para Vimeo (con credenciales):**
 ```bash
-yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" "URL_DE_VIMEO_O_YOUTUBE"
+yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
 ```
+
+**Para YouTube (sin credenciales):**
+```bash
+yt-dlp --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_YOUTUBE"
+```
+
+**Nota**: Algunos videos de YouTube con restricciones especiales pueden requerir cookies del navegador. En esos casos, yt-dlp mostrará un mensaje de error con instrucciones específicas.
 
 ### Sistema de Cola de Descargas
 
