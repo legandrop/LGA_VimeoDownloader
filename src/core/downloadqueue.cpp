@@ -193,11 +193,17 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     
     arguments << "--output" << item.downloadDir + "/%(title)s.%(ext)s";
     arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
+    arguments << "--merge-output-format" << "mp4"; // Force MP4 output when merging
     
     // Add ffmpeg location for proper merging
     QString ffmpegPath = m_toolsManager->getFfmpegPath();
     if (!ffmpegPath.isEmpty() && ffmpegPath != "ffmpeg") {
         arguments << "--ffmpeg-location" << ffmpegPath;
+    }
+    
+    // Add cookies from browser for YouTube (helps avoid bot detection)
+    if (item.url.contains("youtube.com") || item.url.contains("youtu.be")) {
+        arguments << "--cookies-from-browser" << "chrome";
     }
     
     arguments << item.url;

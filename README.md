@@ -137,12 +137,10 @@ La aplicación ejecuta internamente:
 yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
 ```
 
-**Para YouTube (sin credenciales):**
+**Para YouTube (sin credenciales, con cookies automáticas):**
 ```bash
-yt-dlp --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_YOUTUBE"
+yt-dlp --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --merge-output-format mp4 --ffmpeg-location "/ruta/a/ffmpeg" --cookies-from-browser chrome "URL_DE_YOUTUBE"
 ```
-
-**Nota**: Algunos videos de YouTube con restricciones especiales pueden requerir cookies del navegador. En esos casos, yt-dlp mostrará un mensaje de error con instrucciones específicas.
 
 ### Sistema de Cola de Descargas
 

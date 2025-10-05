@@ -75,6 +75,7 @@ void Downloader::downloadVideo(const QString &url)
     QStringList arguments;
     arguments << "--output" << downloadDir + "/%(title)s.%(ext)s";
     arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
+    arguments << "--merge-output-format" << "mp4"; // Force MP4 output when merging
     arguments << "--progress"; // Mostrar progreso
     
     // Add ffmpeg location for proper merging (if available)
@@ -92,6 +93,11 @@ void Downloader::downloadVideo(const QString &url)
         arguments << "--ffmpeg-location" << ffmpegPath;
     }
 #endif
+    
+    // Add cookies from browser for YouTube (helps avoid bot detection)
+    if (url.contains("youtube.com") || url.contains("youtu.be")) {
+        arguments << "--cookies-from-browser" << "chrome";
+    }
     
     arguments << url;
     

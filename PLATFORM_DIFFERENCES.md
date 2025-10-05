@@ -136,20 +136,19 @@ YouTube videos often come in separate audio and video streams that need to be me
 | Windows | ✅ Auto | ✅ Auto | ✅ Full | Standard videos work automatically |
 | Linux | ❌ Manual | ❌ Manual | ⚠️ Manual | Requires manual setup |
 
-### Special YouTube Videos
+### YouTube Cookie Support
 
-Most YouTube videos work without any authentication. However, some videos with special restrictions may require browser cookies:
+The application automatically uses Chrome browser cookies for all YouTube downloads to avoid bot detection and access restrictions. This provides:
 
-- **Age-restricted content**
-- **Private or unlisted videos** 
-- **Videos with enhanced bot protection**
+- **Access to age-restricted content** (if logged in to YouTube in Chrome)
+- **Better success rate** for all YouTube videos
+- **No manual authentication required**
 
-For these cases, yt-dlp will show an error message with specific instructions like:
-```
-ERROR: Sign in to confirm you're not a bot. Use --cookies-from-browser or --cookies for authentication.
-```
+Requirements:
+- Chrome browser installed on the system
+- User has visited YouTube in Chrome (to have cookies available)
 
-The application handles standard YouTube videos automatically without requiring cookies or additional setup.
+The application automatically detects YouTube URLs and adds `--cookies-from-browser chrome` to the yt-dlp command.
 
 ---
 
