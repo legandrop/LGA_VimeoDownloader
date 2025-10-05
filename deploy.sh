@@ -105,6 +105,17 @@ EOL
 # Usar macdeployqt para copiar todas las dependencias necesarias
 "$QT_PATH/bin/macdeployqt" deploy/VimeoDownloader.app
 
+# Crear carpeta toolsmac en deploy y copiar herramientas
+echo ""
+echo "Preparando carpeta toolsmac para deploy..."
+if [ -d "toolsmac" ]; then
+    echo "Copiando herramientas a carpeta deploy..."
+    cp -r toolsmac deploy/VimeoDownloader.app/Contents/MacOS/
+    echo "Herramientas copiadas exitosamente."
+else
+    echo "Carpeta toolsmac no encontrada o vacía."
+fi
+
 # Hacer ejecutable el script
 chmod +x deploy/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
 

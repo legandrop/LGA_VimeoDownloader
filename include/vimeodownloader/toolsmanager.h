@@ -44,9 +44,9 @@ private:
     void updateButtonState();
     
     // Installation methods - macOS
-    void installYtDlpMac();
+    void downloadYtDlpMac();
     void updateYtDlpMac();
-    void installFfmpegMac();
+    void downloadFfmpegMac();
     void updateFfmpegMac();
     
     // Installation methods - Windows

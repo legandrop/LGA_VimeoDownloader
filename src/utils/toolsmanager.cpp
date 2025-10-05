@@ -69,7 +69,22 @@ void ToolsManager::checkYtDlpInstallation()
 #endif
     
 #ifdef Q_OS_MAC
-    // macOS: Check in common Homebrew locations first, then PATH
+    // macOS: Check if yt-dlp exists in the toolsmac subdirectory first, then fallback to system
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString ytDlpPath = appDir + "/toolsmac/yt-dlp";
+    
+    if (QFile::exists(ytDlpPath)) {
+        m_ytDlpInstalled = true;
+        logMessage("✓ yt-dlp found in toolsmac directory");
+        
+        // Check ffmpeg after yt-dlp check is done
+        if (m_pendingProcesses == 0) {
+            QTimer::singleShot(100, this, &ToolsManager::updateButtonState);
+        }
+        return;
+    }
+    
+    // Fallback: Check in common Homebrew locations first, then PATH
     QStringList possiblePaths = {
         "/opt/homebrew/bin/yt-dlp",  // Apple Silicon Homebrew
         "/usr/local/bin/yt-dlp",    // Intel Homebrew
@@ -220,7 +235,22 @@ void ToolsManager::checkFfmpegInstallation()
 #endif
     
 #ifdef Q_OS_MAC
-    // macOS: Check in common Homebrew locations first, then PATH
+    // macOS: Check if ffmpeg exists in the toolsmac subdirectory first, then fallback to system
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString ffmpegPath = appDir + "/toolsmac/ffmpeg";
+    
+    if (QFile::exists(ffmpegPath)) {
+        m_ffmpegInstalled = true;
+        logMessage("✓ ffmpeg found in toolsmac directory");
+        
+        // Update button state after both checks are done
+        if (m_pendingProcesses == 0) {
+            QTimer::singleShot(100, this, &ToolsManager::updateButtonState);
+        }
+        return;
+    }
+    
+    // Fallback: Check in common Homebrew locations first, then PATH
     QStringList possiblePaths = {
         "/opt/homebrew/bin/ffmpeg",  // Apple Silicon Homebrew
         "/usr/local/bin/ffmpeg",    // Intel Homebrew
@@ -409,20 +439,29 @@ void ToolsManager::onInstallUpdateClicked()
 #endif
     
 #ifdef Q_OS_MAC
-    // macOS: Use Homebrew
+    // macOS: Download binaries to toolsmac directory
     if (allInstalled) {
         logMessage("=== Updating Tools ===");
-        updateYtDlpMac();
-        updateFfmpegMac();
+        logMessage("Downloading latest yt-dlp from GitHub...");
+        // Note: ffmpeg is not updated on macOS - only downloaded once
     } else {
         logMessage("=== Installing Tools ===");
         if (!m_ytDlpInstalled) {
-            installYtDlpMac();
+            logMessage("Downloading yt-dlp from GitHub...");
         }
         if (!m_ffmpegInstalled) {
-            installFfmpegMac();
+            logMessage("Downloading ffmpeg from evermeet.cx...");
         }
     }
+    
+    // Start downloads
+    if (!m_ytDlpInstalled || allInstalled) {
+        downloadYtDlpMac();
+    }
+    if (!m_ffmpegInstalled) {
+        downloadFfmpegMac();
+    }
+    return;
 #endif
     
 #ifdef Q_OS_LINUX
@@ -436,218 +475,210 @@ void ToolsManager::onInstallUpdateClicked()
 #endif
 }
 
-// macOS Installation Methods
-void ToolsManager::installYtDlpMac()
+// macOS Download Methods
+void ToolsManager::downloadYtDlpMac()
 {
 #ifdef Q_OS_MAC
-    QProcess *process = new QProcess(this);
+    // GitHub URL for latest yt-dlp for macOS
+    QString url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos";
+    QNetworkRequest request(url);
     
-    // Connect process signals
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        QByteArray data = process->readAllStandardOutput();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage(output);
+    // Set user agent
+    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    
+    logMessage(QString("Downloading yt-dlp from: %1").arg(url));
+    
+    // Start download
+    QNetworkReply *reply = m_networkManager->get(request);
+    
+    connect(reply, &QNetworkReply::downloadProgress, [this](qint64 received, qint64 total) {
+        if (total > 0) {
+            int percentage = (received * 100) / total;
+            logMessage(QString("yt-dlp download progress: %1% (%2 / %3 bytes)")
+                       .arg(percentage)
+                       .arg(received)
+                       .arg(total));
         }
     });
     
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        QByteArray data = process->readAllStandardError();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage("INFO: " + output);
-        }
-    });
-    
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-        
-        if (exitStatus == QProcess::CrashExit || exitCode != 0) {
-            logMessage("ERROR: Failed to install yt-dlp");
-            logMessage("Try installing manually: brew install yt-dlp");
-            logMessage("Make sure Homebrew is installed first");
+    connect(reply, &QNetworkReply::finished, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // Save the downloaded file
+            QString appDir = QCoreApplication::applicationDirPath();
+            QString toolsDir = appDir + "/toolsmac";
+            
+            // Create toolsmac directory if it doesn't exist
+            QDir dir;
+            if (!dir.exists(toolsDir)) {
+                if (!dir.mkpath(toolsDir)) {
+                    logMessage("ERROR: Could not create toolsmac directory");
+                    setButtonEnabled(true);
+                    reply->deleteLater();
+                    return;
+                }
+            }
+            
+            QString ytDlpPath = toolsDir + "/yt-dlp";
+            
+            QFile file(ytDlpPath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write(reply->readAll());
+                file.close();
+                
+                // Make executable
+                file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner |
+                                   QFile::ReadGroup | QFile::ExeGroup |
+                                   QFile::ReadOther | QFile::ExeOther);
+                
+                logMessage("=== yt-dlp downloaded successfully ===");
+                logMessage(QString("Saved to: %1").arg(ytDlpPath));
+                
+                // Check installation after download
+                QTimer::singleShot(500, [this]() {
+                    checkToolsInstallation();
+                });
+            } else {
+                logMessage("ERROR: Could not save yt-dlp");
+                logMessage("Check write permissions in application directory");
+                setButtonEnabled(true);
+            }
         } else {
-            logMessage("=== yt-dlp installed successfully ===");
+            logMessage("ERROR: Failed to download yt-dlp");
+            logMessage(QString("Error: %1").arg(reply->errorString()));
+            logMessage("Please check your internet connection");
+            setButtonEnabled(true);
         }
         
-        // Check installation after process
-        QTimer::singleShot(1000, [this]() {
-            checkToolsInstallation();
-        });
-        
-        process->deleteLater();
+        reply->deleteLater();
     });
-    
-    QString brewPath = getBrewPath();
-    logMessage(QString("Executing: %1 install yt-dlp").arg(brewPath));
-    process->start(brewPath, QStringList() << "install" << "yt-dlp");
-    
-    if (!process->waitForStarted(5000)) {
-        logMessage("ERROR: Could not execute brew install");
-        logMessage("Make sure Homebrew is installed and in PATH");
-        logMessage("Install Homebrew: /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"");
-        setButtonEnabled(true);
-        process->deleteLater();
-    }
 #endif
 }
 
 void ToolsManager::updateYtDlpMac()
 {
 #ifdef Q_OS_MAC
-    QProcess *process = new QProcess(this);
-    
-    // Connect process signals
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        QByteArray data = process->readAllStandardOutput();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage(output);
-        }
-    });
-    
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        QByteArray data = process->readAllStandardError();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage("INFO: " + output);
-        }
-    });
-    
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-        
-        if (exitStatus == QProcess::CrashExit || exitCode != 0) {
-            logMessage("ERROR: Failed to update yt-dlp");
-            logMessage("Try updating manually: brew upgrade yt-dlp");
-        } else {
-            logMessage("=== yt-dlp updated successfully ===");
-        }
-        
-        // Check installation after process
-        QTimer::singleShot(1000, [this]() {
-            checkToolsInstallation();
-        });
-        
-        process->deleteLater();
-    });
-    
-    QString brewPath = getBrewPath();
-    logMessage(QString("Executing: %1 upgrade yt-dlp").arg(brewPath));
-    process->start(brewPath, QStringList() << "upgrade" << "yt-dlp");
-    
-    if (!process->waitForStarted(5000)) {
-        logMessage("ERROR: Could not execute brew upgrade");
-        logMessage("Make sure Homebrew is installed and in PATH");
-        setButtonEnabled(true);
-        process->deleteLater();
-    }
+    // For updates, just download the latest version (same as install)
+    downloadYtDlpMac();
 #endif
 }
 
-void ToolsManager::installFfmpegMac()
+void ToolsManager::downloadFfmpegMac()
 {
 #ifdef Q_OS_MAC
-    QProcess *process = new QProcess(this);
+    // evermeet.cx URL for latest ffmpeg for macOS
+    QString url = "https://evermeet.cx/ffmpeg/getrelease/zip";
+    QNetworkRequest request(url);
     
-    // Connect process signals
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        QByteArray data = process->readAllStandardOutput();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage(output);
+    // Set user agent
+    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    
+    logMessage(QString("Downloading ffmpeg from: %1").arg(url));
+    
+    // Start download
+    QNetworkReply *reply = m_networkManager->get(request);
+    
+    connect(reply, &QNetworkReply::downloadProgress, [this](qint64 received, qint64 total) {
+        if (total > 0) {
+            int percentage = (received * 100) / total;
+            logMessage(QString("ffmpeg download progress: %1% (%2 / %3 bytes)")
+                       .arg(percentage)
+                       .arg(received)
+                       .arg(total));
         }
     });
     
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        QByteArray data = process->readAllStandardError();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage("INFO: " + output);
-        }
-    });
-    
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-        
-        if (exitStatus == QProcess::CrashExit || exitCode != 0) {
-            logMessage("ERROR: Failed to install ffmpeg");
-            logMessage("Try installing manually: brew install ffmpeg");
+    connect(reply, &QNetworkReply::finished, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // Save the downloaded zip file temporarily
+            QString appDir = QCoreApplication::applicationDirPath();
+            QString toolsDir = appDir + "/toolsmac";
+            
+            // Create toolsmac directory if it doesn't exist
+            QDir dir;
+            if (!dir.exists(toolsDir)) {
+                if (!dir.mkpath(toolsDir)) {
+                    logMessage("ERROR: Could not create toolsmac directory");
+                    setButtonEnabled(true);
+                    reply->deleteLater();
+                    return;
+                }
+            }
+            
+            QString tempZipPath = toolsDir + "/ffmpeg_temp.zip";
+            QString ffmpegPath = toolsDir + "/ffmpeg";
+            
+            // Save zip file
+            QFile zipFile(tempZipPath);
+            if (zipFile.open(QIODevice::WriteOnly)) {
+                zipFile.write(reply->readAll());
+                zipFile.close();
+                
+                // Extract ffmpeg binary using system unzip command
+                QProcess *unzipProcess = new QProcess(this);
+                connect(unzipProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                        [this, unzipProcess, tempZipPath, ffmpegPath](int exitCode, QProcess::ExitStatus exitStatus) {
+                    
+                    // Clean up zip file
+                    QFile::remove(tempZipPath);
+                    
+                    if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                        // Make ffmpeg executable
+                        QFile ffmpegFile(ffmpegPath);
+                        if (ffmpegFile.exists()) {
+                            ffmpegFile.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner |
+                                                     QFile::ReadGroup | QFile::ExeGroup |
+                                                     QFile::ReadOther | QFile::ExeOther);
+                            
+                            logMessage("=== ffmpeg downloaded and extracted successfully ===");
+                            logMessage(QString("Saved to: %1").arg(ffmpegPath));
+                            
+                            // Check installation after extraction
+                            QTimer::singleShot(500, [this]() {
+                                checkToolsInstallation();
+                            });
+                        } else {
+                            logMessage("ERROR: ffmpeg binary not found after extraction");
+                            setButtonEnabled(true);
+                        }
+                    } else {
+                        logMessage("ERROR: Failed to extract ffmpeg zip file");
+                        setButtonEnabled(true);
+                    }
+                    
+                    unzipProcess->deleteLater();
+                });
+                
+                // Extract only the ffmpeg binary from the zip
+                unzipProcess->start("unzip", QStringList() << "-j" << tempZipPath << "ffmpeg" << "-d" << toolsDir);
+                
+                if (!unzipProcess->waitForStarted(5000)) {
+                    logMessage("ERROR: Could not start unzip process");
+                    QFile::remove(tempZipPath);
+                    setButtonEnabled(true);
+                    unzipProcess->deleteLater();
+                }
+            } else {
+                logMessage("ERROR: Could not save ffmpeg zip file");
+                logMessage("Check write permissions in application directory");
+                setButtonEnabled(true);
+            }
         } else {
-            logMessage("=== ffmpeg installed successfully ===");
+            logMessage("ERROR: Failed to download ffmpeg");
+            logMessage(QString("Error: %1").arg(reply->errorString()));
+            logMessage("Please check your internet connection");
+            setButtonEnabled(true);
         }
         
-        // Check installation after process
-        QTimer::singleShot(1000, [this]() {
-            checkToolsInstallation();
-        });
-        
-        process->deleteLater();
+        reply->deleteLater();
     });
-    
-    QString brewPath = getBrewPath();
-    logMessage(QString("Executing: %1 install ffmpeg").arg(brewPath));
-    process->start(brewPath, QStringList() << "install" << "ffmpeg");
-    
-    if (!process->waitForStarted(5000)) {
-        logMessage("ERROR: Could not execute brew install ffmpeg");
-        logMessage("Make sure Homebrew is installed and in PATH");
-        setButtonEnabled(true);
-        process->deleteLater();
-    }
 #endif
 }
 
 void ToolsManager::updateFfmpegMac()
 {
 #ifdef Q_OS_MAC
-    QProcess *process = new QProcess(this);
-    
-    // Connect process signals
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        QByteArray data = process->readAllStandardOutput();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage(output);
-        }
-    });
-    
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        QByteArray data = process->readAllStandardError();
-        QString output = QString::fromUtf8(data).trimmed();
-        if (!output.isEmpty()) {
-            logMessage("INFO: " + output);
-        }
-    });
-    
-    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-        
-        if (exitStatus == QProcess::CrashExit || exitCode != 0) {
-            logMessage("ERROR: Failed to update ffmpeg");
-            logMessage("Try updating manually: brew upgrade ffmpeg");
-        } else {
-            logMessage("=== ffmpeg updated successfully ===");
-        }
-        
-        // Check installation after process
-        QTimer::singleShot(1000, [this]() {
-            checkToolsInstallation();
-        });
-        
-        process->deleteLater();
-    });
-    
-    QString brewPath = getBrewPath();
-    logMessage(QString("Executing: %1 upgrade ffmpeg").arg(brewPath));
-    process->start(brewPath, QStringList() << "upgrade" << "ffmpeg");
-    
-    if (!process->waitForStarted(5000)) {
-        logMessage("ERROR: Could not execute brew upgrade ffmpeg");
-        logMessage("Make sure Homebrew is installed and in PATH");
-        setButtonEnabled(true);
-        process->deleteLater();
-    }
+    // For updates, just download the latest version (same as install)
+    downloadFfmpegMac();
 #endif
 }
 
@@ -791,8 +822,17 @@ QString ToolsManager::getYtDlpPath() const
     // Windows: Use tools subdirectory
     QString appDir = QCoreApplication::applicationDirPath();
     return appDir + "/tools/yt-dlp.exe";
+#elif defined(Q_OS_MAC)
+    // macOS: Check toolsmac directory first, then fallback to system PATH
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString localPath = appDir + "/toolsmac/yt-dlp";
+    if (QFile::exists(localPath)) {
+        return localPath;
+    }
+    // Fallback to system PATH
+    return "yt-dlp";
 #else
-    // macOS/Linux: Use system PATH
+    // Linux: Use system PATH
     return "yt-dlp";
 #endif
 }
@@ -803,8 +843,17 @@ QString ToolsManager::getFfmpegPath() const
     // Windows: Use tools subdirectory
     QString appDir = QCoreApplication::applicationDirPath();
     return appDir + "/tools/ffmpeg.exe";
+#elif defined(Q_OS_MAC)
+    // macOS: Check toolsmac directory first, then fallback to system PATH
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString localPath = appDir + "/toolsmac/ffmpeg";
+    if (QFile::exists(localPath)) {
+        return localPath;
+    }
+    // Fallback to system PATH
+    return "ffmpeg";
 #else
-    // macOS/Linux: Use system PATH
+    // Linux: Use system PATH
     return "ffmpeg";
 #endif
 }
@@ -830,3 +879,4 @@ QString ToolsManager::getBrewPath() const
     return "brew";
 #endif
 }
+

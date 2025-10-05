@@ -19,15 +19,13 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
 ## Requisitos
 
 ### Para usar la aplicación:
-- yt-dlp instalado en el sistema
-- ffmpeg instalado en el sistema (requerido para YouTube)
+- **No se requiere instalación manual** - La aplicación incluye sus propios binarios
+- yt-dlp y ffmpeg se descargan automáticamente al directorio de la aplicación
   ```bash
-  # macOS (automático via app)
-  brew install yt-dlp ffmpeg
-  
-  # Windows (automático via app para yt-dlp, manual para ffmpeg)
-  # La app descarga yt-dlp automáticamente a la carpeta tools/
-  # ffmpeg debe colocarse manualmente en la carpeta tools/
+  # macOS y Windows (automático via app)
+  # La app descarga yt-dlp y ffmpeg automáticamente a carpetas locales:
+  # - macOS: toolsmac/ dentro del bundle de la aplicación
+  # - Windows: tools/ en el directorio de la aplicación
   
   # Linux (manual)
   sudo apt install yt-dlp ffmpeg  # Ubuntu/Debian
@@ -87,7 +85,8 @@ VimeoDownloader/
 │   ├── styles/
 │   └── icons/
 ├── cmake/                  # Archivos de configuración CMake
-├── tools/                  # Herramientas externas (yt-dlp, ffmpeg)
+├── tools/                  # Herramientas externas Windows (yt-dlp.exe, ffmpeg.exe)
+├── toolsmac/               # Herramientas externas macOS (yt-dlp, ffmpeg)
 ├── build/                  # Carpeta de compilación (generada)
 └── deploy/                 # Versión portable (generada)
 ```
@@ -133,7 +132,7 @@ La aplicación tiene 4 secciones principales:
 
 La aplicación ejecuta internamente:
 ```bash
-yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "best" "URL_DE_VIMEO_O_YOUTUBE"
+yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" "URL_DE_VIMEO_O_YOUTUBE"
 ```
 
 ### Sistema de Cola de Descargas

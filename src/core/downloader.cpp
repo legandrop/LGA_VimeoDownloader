@@ -73,7 +73,7 @@ void Downloader::downloadVideo(const QString &url)
     // Argumentos para yt-dlp
     QStringList arguments;
     arguments << "--output" << downloadDir + "/%(title)s.%(ext)s";
-    arguments << "--format" << "best[height<=720]"; // Calidad máxima 720p
+    arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
     arguments << "--progress"; // Mostrar progreso
     arguments << url;
     

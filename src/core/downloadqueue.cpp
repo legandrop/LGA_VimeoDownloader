@@ -187,7 +187,7 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     arguments << "-u" << item.username;
     arguments << "-p" << item.password;
     arguments << "--output" << item.downloadDir + "/%(title)s.%(ext)s";
-    arguments << "--format" << "best";
+    arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
     arguments << item.url;
     
     // Activate progress bar and show percentage text

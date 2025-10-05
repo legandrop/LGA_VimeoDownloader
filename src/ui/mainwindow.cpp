@@ -664,7 +664,8 @@ void MainWindow::detectOperatingSystem()
 #ifdef Q_OS_MAC
     m_logOutput->append("=== System Information ===");
     m_logOutput->append("Operating System: macOS");
-    m_logOutput->append("Tools installation method: brew");
+    m_logOutput->append("Tools installation method: Download from GitHub");
+    m_logOutput->append("Tools location: Application bundle");
     m_logOutput->append("Supported platforms: Vimeo, YouTube");
     m_logOutput->append("===========================");
 #elif defined(Q_OS_WIN)

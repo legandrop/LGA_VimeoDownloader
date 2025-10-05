@@ -33,6 +33,17 @@ else
     echo "Advertencia: Qt no encontrado en $QT_PATH. La aplicación puede no ejecutarse correctamente."
 fi
 
+# Crear carpeta toolsmac en el bundle y copiar herramientas
+echo ""
+echo "Preparando carpeta toolsmac..."
+if [ -d "toolsmac" ]; then
+    echo "Copiando herramientas desde carpeta toolsmac del proyecto..."
+    cp -r toolsmac build/VimeoDownloader.app/Contents/MacOS/
+    echo "Herramientas copiadas exitosamente."
+else
+    echo "Carpeta toolsmac del proyecto no encontrada o vacía."
+fi
+
 echo ""
 echo "Compilación completada. Ejecutando VimeoDownloader..."
 echo ""
