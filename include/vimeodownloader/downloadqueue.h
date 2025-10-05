@@ -12,12 +12,14 @@
 
 #include "downloaditem.h"
 
+class ToolsManager;
+
 class DownloadQueue : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit DownloadQueue(QTextEdit *logOutput, QProgressBar *progressBar, QGroupBox *progressGroup, QObject *parent = nullptr);
+    explicit DownloadQueue(QTextEdit *logOutput, QProgressBar *progressBar, QGroupBox *progressGroup, ToolsManager *toolsManager, QObject *parent = nullptr);
     ~DownloadQueue();
 
     // Queue management
@@ -64,6 +66,7 @@ private:
     QTextEdit *m_logOutput;
     QProgressBar *m_progressBar;
     QGroupBox *m_progressGroup;
+    ToolsManager *m_toolsManager;
     
     // Queue management
     QQueue<DownloadItem> m_queue;

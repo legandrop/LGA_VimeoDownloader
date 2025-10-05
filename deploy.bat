@@ -36,6 +36,17 @@ copy /Y build\VimeoDownloader.exe deploy\
 REM Usar windeployqt para copiar todas las DLLs de Qt necesarias
 C:\Qt\6.8.2\mingw_64\bin\windeployqt.exe --release deploy\VimeoDownloader.exe
 
+REM Crear carpeta tools en deploy y copiar herramientas
+echo.
+echo Preparando carpeta tools para deploy...
+if not exist deploy\tools mkdir deploy\tools
+if exist tools\*.* (
+    echo Copiando herramientas a carpeta deploy...
+    copy /Y tools\*.* deploy\tools\
+) else (
+    echo Carpeta tools no encontrada o vacía.
+)
+
 echo.
 echo Implementacion completada exitosamente.
 echo La aplicacion portable esta en la carpeta 'deploy'.

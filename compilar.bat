@@ -33,6 +33,17 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
+REM Crear carpeta tools si no existe y copiar herramientas
+echo.
+echo Preparando carpeta tools...
+if not exist tools mkdir tools
+if exist ..\tools\*.* (
+    echo Copiando herramientas desde carpeta tools del proyecto...
+    copy /Y ..\tools\*.* tools\
+) else (
+    echo Carpeta tools del proyecto no encontrada o vacía.
+)
+
 REM Ejecutar la aplicación
 echo.
 echo Compilación completada exitosamente.

@@ -49,16 +49,16 @@ void ToolsManager::checkToolsInstallation()
 void ToolsManager::checkYtDlpInstallation()
 {
 #ifdef Q_OS_WIN
-    // Windows: Check if yt-dlp.exe exists in the same directory as the executable
+    // Windows: Check if yt-dlp.exe exists in the tools subdirectory
     QString appDir = QCoreApplication::applicationDirPath();
-    QString ytDlpPath = appDir + "/yt-dlp.exe";
+    QString ytDlpPath = appDir + "/tools/yt-dlp.exe";
     
     if (QFile::exists(ytDlpPath)) {
         m_ytDlpInstalled = true;
-        logMessage("✓ yt-dlp.exe found in application directory");
+        logMessage("✓ yt-dlp.exe found in tools directory");
     } else {
         m_ytDlpInstalled = false;
-        logMessage("✗ yt-dlp.exe not found in application directory");
+        logMessage("✗ yt-dlp.exe not found in tools directory");
     }
     
     // Check ffmpeg after yt-dlp check is done
@@ -200,16 +200,16 @@ void ToolsManager::checkYtDlpInstallation()
 void ToolsManager::checkFfmpegInstallation()
 {
 #ifdef Q_OS_WIN
-    // Windows: Check if ffmpeg.exe exists in the same directory as the executable
+    // Windows: Check if ffmpeg.exe exists in the tools subdirectory
     QString appDir = QCoreApplication::applicationDirPath();
-    QString ffmpegPath = appDir + "/ffmpeg.exe";
+    QString ffmpegPath = appDir + "/tools/ffmpeg.exe";
     
     if (QFile::exists(ffmpegPath)) {
         m_ffmpegInstalled = true;
-        logMessage("✓ ffmpeg.exe found in application directory");
+        logMessage("✓ ffmpeg.exe found in tools directory");
     } else {
         m_ffmpegInstalled = false;
-        logMessage("✗ ffmpeg.exe not found in application directory");
+        logMessage("✗ ffmpeg.exe not found in tools directory");
     }
     
     // Update button state after both checks are done
@@ -681,7 +681,20 @@ void ToolsManager::downloadYtDlpWindows()
         if (reply->error() == QNetworkReply::NoError) {
             // Save the downloaded file
             QString appDir = QCoreApplication::applicationDirPath();
-            QString ytDlpPath = appDir + "/yt-dlp.exe";
+            QString toolsDir = appDir + "/tools";
+            
+            // Create tools directory if it doesn't exist
+            QDir dir;
+            if (!dir.exists(toolsDir)) {
+                if (!dir.mkpath(toolsDir)) {
+                    logMessage("ERROR: Could not create tools directory");
+                    setButtonEnabled(true);
+                    reply->deleteLater();
+                    return;
+                }
+            }
+            
+            QString ytDlpPath = toolsDir + "/yt-dlp.exe";
             
             QFile file(ytDlpPath);
             if (file.open(QIODevice::WriteOnly)) {
@@ -770,6 +783,30 @@ void ToolsManager::setButtonStyle(const QString &styleClass)
         m_toolsButton->style()->unpolish(m_toolsButton);
         m_toolsButton->style()->polish(m_toolsButton);
     }
+}
+
+QString ToolsManager::getYtDlpPath() const
+{
+#ifdef Q_OS_WIN
+    // Windows: Use tools subdirectory
+    QString appDir = QCoreApplication::applicationDirPath();
+    return appDir + "/tools/yt-dlp.exe";
+#else
+    // macOS/Linux: Use system PATH
+    return "yt-dlp";
+#endif
+}
+
+QString ToolsManager::getFfmpegPath() const
+{
+#ifdef Q_OS_WIN
+    // Windows: Use tools subdirectory
+    QString appDir = QCoreApplication::applicationDirPath();
+    return appDir + "/tools/ffmpeg.exe";
+#else
+    // macOS/Linux: Use system PATH
+    return "ffmpeg";
+#endif
 }
 
 QString ToolsManager::getBrewPath() const

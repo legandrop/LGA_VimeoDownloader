@@ -25,6 +25,10 @@ public:
     // Tool status getters
     bool isYtDlpInstalled() const { return m_ytDlpInstalled; }
     bool isFfmpegInstalled() const { return m_ffmpegInstalled; }
+    
+    // Tool path getters
+    QString getYtDlpPath() const;
+    QString getFfmpegPath() const;
 
 signals:
     void toolsStatusChanged(bool allInstalled);

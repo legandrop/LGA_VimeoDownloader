@@ -1,14 +1,16 @@
 #include "vimeodownloader/downloadqueue.h"
+#include "vimeodownloader/toolsmanager.h"
 
 #include <QRegularExpression>
 #include <QMutexLocker>
 #include <QTimer>
 
-DownloadQueue::DownloadQueue(QTextEdit *logOutput, QProgressBar *progressBar, QGroupBox *progressGroup, QObject *parent)
+DownloadQueue::DownloadQueue(QTextEdit *logOutput, QProgressBar *progressBar, QGroupBox *progressGroup, ToolsManager *toolsManager, QObject *parent)
     : QObject(parent)
     , m_logOutput(logOutput)
     , m_progressBar(progressBar)
     , m_progressGroup(progressGroup)
+    , m_toolsManager(toolsManager)
     , m_currentProcess(nullptr)
     , m_isRunning(false)
     , m_isPaused(false)
@@ -198,8 +200,9 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     logMessage("---");
     
     // Start process
-    logMessage(QString("Executing: yt-dlp %1").arg(arguments.join(" ").replace(item.password, "***")));
-    m_currentProcess->start("yt-dlp", arguments);
+    QString ytDlpPath = m_toolsManager->getYtDlpPath();
+    logMessage(QString("Executing: %1 %2").arg(ytDlpPath).arg(arguments.join(" ").replace(item.password, "***")));
+    m_currentProcess->start(ytDlpPath, arguments);
     
     if (!m_currentProcess->waitForStarted(5000)) {
         logMessage("ERROR: Could not start yt-dlp. Verify it's installed.");

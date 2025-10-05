@@ -26,8 +26,8 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
   brew install yt-dlp ffmpeg
   
   # Windows (automático via app para yt-dlp, manual para ffmpeg)
-  # La app descarga yt-dlp automáticamente
-  # ffmpeg debe instalarse manualmente
+  # La app descarga yt-dlp automáticamente a la carpeta tools/
+  # ffmpeg debe colocarse manualmente en la carpeta tools/
   
   # Linux (manual)
   sudo apt install yt-dlp ffmpeg  # Ubuntu/Debian
@@ -41,18 +41,31 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
 
 ## Compilación
 
+### Windows
+```batch
+compilar.bat
+```
+
 ### macOS
 ```bash
 ./compilar.sh
 ```
 
 ### Crear versión portable
-```bash
+```batch
+# Windows
+deploy.bat
+
+# macOS
 ./deploy.sh
 ```
 
 ### Limpiar archivos de compilación
-```bash
+```batch
+# Windows
+limpiar.bat
+
+# macOS
 ./limpiar.sh
 ```
 
@@ -74,6 +87,7 @@ VimeoDownloader/
 │   ├── styles/
 │   └── icons/
 ├── cmake/                  # Archivos de configuración CMake
+├── tools/                  # Herramientas externas (yt-dlp, ffmpeg)
 ├── build/                  # Carpeta de compilación (generada)
 └── deploy/                 # Versión portable (generada)
 ```

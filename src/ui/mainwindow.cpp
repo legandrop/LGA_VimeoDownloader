@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
     setInitialSettingsState();
     
     // Initialize download queue
-    m_downloadQueue = new DownloadQueue(m_logOutput, m_progressBar, m_progressGroup, this);
+    m_downloadQueue = new DownloadQueue(m_logOutput, m_progressBar, m_progressGroup, m_toolsManager, this);
     connect(m_downloadQueue, &DownloadQueue::downloadStarted, this, &MainWindow::onDownloadStarted);
     connect(m_downloadQueue, &DownloadQueue::downloadCompleted, this, &MainWindow::onDownloadCompleted);
     connect(m_downloadQueue, &DownloadQueue::queueStatusChanged, this, &MainWindow::onQueueStatusChanged);

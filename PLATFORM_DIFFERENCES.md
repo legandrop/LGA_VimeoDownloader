@@ -28,17 +28,18 @@ This document explains the differences in yt-dlp installation and management bet
 ## Windows Implementation ⚠️ (Not Tested Yet)
 
 ### Detection Method
-- Checks for `yt-dlp.exe` in the same directory as the application executable
+- Checks for `yt-dlp.exe` in the `tools/` subdirectory relative to the application executable
 - Uses `QFile::exists()` to verify file presence
 
 ### Installation Method
-- **Install**: Downloads `yt-dlp.exe` from GitHub releases
-- **Update**: Downloads latest `yt-dlp.exe` and replaces existing file
+- **Install**: Downloads `yt-dlp.exe` from GitHub releases to `tools/` subdirectory
+- **Update**: Downloads latest `yt-dlp.exe` and replaces existing file in `tools/` subdirectory
 - Downloads from: `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe`
+- Automatically creates `tools/` directory if it doesn't exist
 
 ### Requirements
 - Internet connection for download
-- Write permissions in application directory
+- Write permissions in application directory and `tools/` subdirectory
 - No external dependencies (self-contained)
 
 ### Status
@@ -76,9 +77,9 @@ Could use similar approaches to macOS:
 
 | Feature | macOS | Windows | Linux |
 |---------|-------|---------|-------|
-| Detection | System PATH | Local exe file | Not implemented |
-| Installation | Homebrew | GitHub download | Not implemented |
-| Updates | Homebrew | GitHub download | Not implemented |
+| Detection | System PATH | tools/ subdirectory | Not implemented |
+| Installation | Homebrew | GitHub download to tools/ | Not implemented |
+| Updates | Homebrew | GitHub download to tools/ | Not implemented |
 | Dependencies | Homebrew | None | Not implemented |
 | Status | ✅ Tested | ⚠️ Needs testing | ❌ Not implemented |
 
@@ -111,8 +112,8 @@ When testing on Windows, verify:
    - [ ] UI remains responsive during download
 
 5. **Integration**
-   - [ ] Downloaded yt-dlp.exe works with video downloads
-   - [ ] Correct executable path is used for downloads
+   - [ ] Downloaded yt-dlp.exe works with video downloads from tools/ subdirectory
+   - [ ] Correct executable path is used for downloads (tools/yt-dlp.exe)
 
 ---
 
@@ -123,6 +124,7 @@ When testing on Windows, verify:
 - Error handling includes both network and file system errors
 - Progress reporting keeps user informed during downloads
 - All Windows-specific code is wrapped in `#ifdef Q_OS_WIN` blocks
+- Tools are stored in `tools/` subdirectory for better organization and portability
 
 ## YouTube Support Requirements
 
