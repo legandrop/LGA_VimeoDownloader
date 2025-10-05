@@ -188,6 +188,13 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     arguments << "-p" << item.password;
     arguments << "--output" << item.downloadDir + "/%(title)s.%(ext)s";
     arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
+    
+    // Add ffmpeg location for proper merging
+    QString ffmpegPath = m_toolsManager->getFfmpegPath();
+    if (!ffmpegPath.isEmpty() && ffmpegPath != "ffmpeg") {
+        arguments << "--ffmpeg-location" << ffmpegPath;
+    }
+    
     arguments << item.url;
     
     // Activate progress bar and show percentage text

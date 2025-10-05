@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QCoreApplication>
 #include <QRegularExpression>
+#include <QFile>
 
 Downloader::Downloader(QObject *parent)
     : QObject(parent)
@@ -75,6 +76,23 @@ void Downloader::downloadVideo(const QString &url)
     arguments << "--output" << downloadDir + "/%(title)s.%(ext)s";
     arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
     arguments << "--progress"; // Mostrar progreso
+    
+    // Add ffmpeg location for proper merging (if available)
+    // Note: This downloader doesn't have access to ToolsManager, so we try common locations
+#ifdef Q_OS_WIN
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString ffmpegPath = appDir + "/tools/ffmpeg.exe";
+    if (QFile::exists(ffmpegPath)) {
+        arguments << "--ffmpeg-location" << ffmpegPath;
+    }
+#elif defined(Q_OS_MAC)
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString ffmpegPath = appDir + "/toolsmac/ffmpeg";
+    if (QFile::exists(ffmpegPath)) {
+        arguments << "--ffmpeg-location" << ffmpegPath;
+    }
+#endif
+    
     arguments << url;
     
     emit logMessage(QString("Ejecutando: yt-dlp %1").arg(arguments.join(" ")));
