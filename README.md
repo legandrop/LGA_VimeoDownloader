@@ -1,6 +1,6 @@
 # VimeoDownloader
 
-Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube usando yt-dlp con sistema de cola de descargas.
+Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube usando yt-dlp con sistema de cola de descargas. **Completamente portable** - incluye todas las herramientas necesarias.
 
 ## Características
 
@@ -9,26 +9,26 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
 - **Sistema de cola de descargas** - procesa múltiples descargas secuencialmente
 - **Contador persistente** - rastrea descargas completadas durante la sesión
 - **Descarga usando yt-dlp + ffmpeg** con credenciales de usuario
-- **Detección automática de herramientas** - instala o actualiza yt-dlp y ffmpeg automáticamente
+- **Herramientas locales** - yt-dlp y ffmpeg incluidos en la aplicación (no requiere instalación global)
+- **Formatos compatibles con QuickTime** - descarga directamente en MP4 con H.264 + AAC
 - **Configuración persistente** - guarda credenciales de Vimeo de forma segura
 - **Log en tiempo real** - muestra todo el proceso de descarga
 - **Control total de cola** - botón Cancel para resetear todo
 - **Compatible con macOS y Windows**
-- **Aplicación completamente portable**
+- **Aplicación completamente portable** - funciona sin instalación previa
 
 ## Requisitos
 
 ### Para usar la aplicación:
-- **No se requiere instalación manual** - La aplicación incluye sus propios binarios
-- yt-dlp y ffmpeg se descargan automáticamente al directorio de la aplicación
+- **Completamente autónoma** - Incluye yt-dlp y ffmpeg en el paquete de la aplicación
+- **No requiere instalación previa** - Las herramientas se descargan automáticamente si es necesario
   ```bash
-  # macOS y Windows (automático via app)
-  # La app descarga yt-dlp y ffmpeg automáticamente a carpetas locales:
-  # - macOS: toolsmac/ dentro del bundle de la aplicación
+  # Las herramientas se incluyen automáticamente:
+  # - macOS: toolsmac/ dentro del bundle (.app/Contents/MacOS/toolsmac/)
   # - Windows: tools/ en el directorio de la aplicación
-  
-  # Linux (manual)
-  sudo apt install yt-dlp ffmpeg  # Ubuntu/Debian
+
+  # El botón "Update Tools" descarga la versión más reciente desde GitHub
+  # El botón "Install Tools" instala herramientas iniciales si no existen
   ```
 
 ### Para compilar:
@@ -130,21 +130,28 @@ La aplicación tiene 4 secciones principales:
 
 ### Comando equivalente
 
-La aplicación ejecuta internamente:
+La aplicación ejecuta internamente comandos optimizados:
 
 **Para Vimeo (con credenciales):**
 ```bash
-yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
+yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
 ```
 
 **Para YouTube (sin credenciales, con cookies automáticas):**
 ```bash
-yt-dlp --output "/ruta/descarga/%(title)s.%(ext)s" --format "bv*+ba/b" --merge-output-format mp4 --ffmpeg-location "/ruta/a/ffmpeg" --cookies-from-browser chrome "URL_DE_YOUTUBE"
+yt-dlp --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --ffmpeg-location "/ruta/a/ffmpeg" --cookies-from-browser chrome "URL_DE_YOUTUBE"
 ```
+
+### Características técnicas
+
+- **Formatos QuickTime**: Descarga directamente en MP4 con H.264 + AAC (compatible con QuickTime, Preview, VLC)
+- **Nombres seguros**: `--restrict-filenames` convierte caracteres especiales a ASCII seguro
+- **Herramientas locales**: yt-dlp y ffmpeg incluidos en la aplicación (toolsmac/ en macOS, tools/ en Windows)
+- **Sin recodificación**: Los videos se descargan directamente en formatos compatibles
 
 ### Sistema de Cola de Descargas
 
-La aplicación incluye un sistema de cola avanzado:
+La aplicación incluye un sistema de cola:
 
 - **Cola secuencial**: Las descargas se procesan una por una
 - **Contador persistente**: Formato (actual/total) que persiste durante la sesión
@@ -154,13 +161,5 @@ La aplicación incluye un sistema de cola avanzado:
 
 Para más detalles, consulta: [DOWNLOAD_QUEUE_SYSTEM.md](DOWNLOAD_QUEUE_SYSTEM.md)
 
-## Notas de Desarrollo
 
-- Basado en la estructura y estilo de PipeSync
-- Usa el mismo tema oscuro y paleta de colores
-- Preparado para funcionar tanto en macOS como Windows
-- Arquitectura modular para fácil extensión
 
-## Licencia
-
-© 2024 LGA. Todos los derechos reservados.

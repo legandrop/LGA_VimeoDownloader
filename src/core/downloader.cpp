@@ -73,9 +73,11 @@ void Downloader::downloadVideo(const QString &url)
     
     // Argumentos para yt-dlp
     QStringList arguments;
-    arguments << "--output" << downloadDir + "/%(title)s.%(ext)s";
-    arguments << "--format" << "bv*+ba/b"; // Best video + best audio, fallback to best single file
-    arguments << "--merge-output-format" << "mp4"; // Force MP4 output when merging
+    // Use a safer output template that avoids problematic characters
+    arguments << "--output" << downloadDir + "/%(title).200s.%(ext)s";
+    arguments << "--restrict-filenames"; // Restrict filenames to ASCII characters
+    // Use QuickTime-compatible formats: MP4 video + M4A audio, fallback to best MP4
+    arguments << "--format" << "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]";
     arguments << "--progress"; // Mostrar progreso
     
     // Add ffmpeg location for proper merging (if available)

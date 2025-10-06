@@ -6,8 +6,7 @@ This document explains the differences in yt-dlp and ffmpeg installation and man
 
 ### Detection Method
 - **Primary**: Checks for binaries in `toolsmac/` subdirectory within the application bundle
-- **Fallback**: Checks common Homebrew locations (`/opt/homebrew/bin/`, `/usr/local/bin/`)
-- **Final Fallback**: Uses system PATH
+- **No fallbacks**: Uses only local tools (completely self-contained)
 
 ### Installation Method
 - **Install**: Downloads binaries directly from GitHub/evermeet.cx to `toolsmac/` subdirectory
@@ -18,14 +17,15 @@ This document explains the differences in yt-dlp and ffmpeg installation and man
 ### Requirements
 - Internet connection for download
 - Write permissions in application bundle
-- No external dependencies (self-contained)
+- **No external dependencies** (completely self-contained)
 
 ### Status
 - ✅ Fully implemented and tested
 - ✅ Detection working (local binaries prioritized)
 - ✅ Installation working (direct download)
 - ✅ Updates working (yt-dlp only)
-- ✅ Completely portable (no Homebrew required)
+- ✅ **Completely portable** (no Homebrew required)
+- ✅ **QuickTime compatible** formats by default
 
 ---
 
@@ -124,16 +124,18 @@ YouTube videos often come in separate audio and video streams that need to be me
 |---------|-------|---------|
 | **Authentication** | Username + Password required | No credentials needed |
 | **Bot Detection** | Minimal | Requires browser cookies |
-| **Format Selection** | `bv*+ba/b` | `bv*+ba/b` |
+| **Format Selection** | `bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]` | `bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]` |
 | **ffmpeg Location** | `--ffmpeg-location` required | `--ffmpeg-location` required |
 | **Cookies** | Not needed | `--cookies-from-browser chrome` |
+| **Output Format** | MP4 with H.264 + AAC (QuickTime compatible) | MP4 with H.264 + AAC (QuickTime compatible) |
+| **Recodificación** | Ninguna (formato nativo compatible) | Ninguna (formato nativo compatible) |
 
 ### Platform-Specific YouTube Support
 
 | Platform | yt-dlp | ffmpeg | YouTube Support | Notes |
 |----------|--------|--------|-----------------|-------|
-| macOS | ✅ Auto | ✅ Auto | ✅ Full | Standard videos work automatically |
-| Windows | ✅ Auto | ✅ Auto | ✅ Full | Standard videos work automatically |
+| macOS | ✅ Local | ✅ Local | ✅ Full | QuickTime-compatible formats, no Homebrew |
+| Windows | ✅ Local | ✅ Local | ✅ Full | Standard videos work automatically |
 | Linux | ❌ Manual | ❌ Manual | ⚠️ Manual | Requires manual setup |
 
 ### YouTube Cookie Support
@@ -155,10 +157,10 @@ The application automatically detects YouTube URLs and adds `--cookies-from-brow
 ## Installation Process Flow
 
 ### macOS
-1. Check `toolsmac/yt-dlp` and `toolsmac/ffmpeg`
-2. If missing, download from GitHub/evermeet.cx
+1. Check `toolsmac/yt-dlp` and `toolsmac/ffmpeg` (local binaries)
+2. If missing, download from GitHub/evermeet.cx to `toolsmac/` subdirectory
 3. Extract and set executable permissions
-4. Ready to use (completely self-contained)
+4. **Ready to use** (completely self-contained, no Homebrew required)
 
 ### Windows
 1. Check `tools/yt-dlp.exe` and `tools/ffmpeg.exe`
