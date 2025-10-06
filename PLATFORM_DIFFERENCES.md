@@ -178,7 +178,7 @@ The application automatically detects YouTube URLs and adds `--cookies-from-brow
 ## Update Process
 
 ### Both macOS and Windows
-- **yt-dlp**: Automatically downloaded and replaced when "Update Tools" is clicked
+- **yt-dlp**: Automatically downloaded and replaced when "Update dlp" is clicked
 - **ffmpeg**: Not automatically updated (stable, less frequent updates needed)
 - **Process**: Download → Replace → Verify → Ready
 

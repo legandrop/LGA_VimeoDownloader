@@ -27,7 +27,7 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
   # - macOS: toolsmac/ dentro del bundle (.app/Contents/MacOS/toolsmac/)
   # - Windows: tools/ en el directorio de la aplicación
 
-  # El botón "Update Tools" descarga la versión más reciente desde GitHub
+  # El botón "Update dlp" descarga la versión más reciente desde GitHub
   # El botón "Install Tools" instala herramientas iniciales si no existen
   ```
 
@@ -102,7 +102,7 @@ VimeoDownloader/
    - Haz clic en "Save" para guardar la configuración
 4. **Instala herramientas** (si no están instaladas):
    - Haz clic en "Install Tools" para instalar yt-dlp y ffmpeg automáticamente
-   - Si ya están instaladas, usa "Update Tools" para actualizarlas
+   - Si ya están instaladas, usa "Update dlp" para actualizarlas
 5. **Descarga videos**:
    - Ingresa una URL válida de Vimeo o YouTube
    - Haz clic en "Download" para agregar a la cola (se habilita cuando todo está configurado)
@@ -125,7 +125,7 @@ La aplicación tiene 4 secciones principales:
 3. **Settings**: Configuración en 3 filas:
    - Fila 1: `Username | Password | Save`
    - Fila 2: `Download Folder | Browse`
-   - Fila 3: `Tools Button` (Install/Update Tools)
+   - Fila 3: `Tools Button` (Install/Update dlp)
 4. **Log**: Terminal en tiempo real con todo el proceso de cola
 
 ### Comando equivalente

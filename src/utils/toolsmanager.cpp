@@ -385,7 +385,7 @@ void ToolsManager::updateButtonState()
     bool allInstalled = m_ytDlpInstalled && m_ffmpegInstalled;
     
     if (allInstalled) {
-        setButtonText("Update Tools");
+        setButtonText("Update dlp");
         setButtonStyle("");
     } else {
         setButtonText("Install Tools");
