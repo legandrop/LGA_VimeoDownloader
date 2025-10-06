@@ -31,7 +31,7 @@ REM Crear el script de Inno Setup
 echo Generando script de instalador...
 echo [Setup] > VimeoDownloader_installer.iss
 echo AppName=VimeoDownloader >> VimeoDownloader_installer.iss
-echo AppVersion=0.82 >> VimeoDownloader_installer.iss
+echo AppVersion=0.83 >> VimeoDownloader_installer.iss
 echo DefaultDirName=C:\Portable\LGA\VimeoDownloader >> VimeoDownloader_installer.iss
 echo DefaultGroupName=VimeoDownloader >> VimeoDownloader_installer.iss
 echo UninstallDisplayIcon={app}\VimeoDownloader.exe >> VimeoDownloader_installer.iss
