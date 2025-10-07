@@ -194,8 +194,8 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     // Use a safer output template that avoids problematic characters
     arguments << "--output" << item.downloadDir + "/%(title).200s.%(ext)s";
     arguments << "--restrict-filenames"; // Restrict filenames to ASCII characters
-    // Use QuickTime-compatible formats: MP4 video + M4A audio, fallback to best MP4
-    arguments << "--format" << "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]";
+    // Use QuickTime-compatible formats: H.264 video + AAC audio, fallback to best H.264
+    arguments << "--format" << "bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[acodec^=mp4a][ext=m4a]/best[vcodec^=avc1][ext=mp4]";
     
     // Add ffmpeg location for proper merging
     QString ffmpegPath = m_toolsManager->getFfmpegPath();
