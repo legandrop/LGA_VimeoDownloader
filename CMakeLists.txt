@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Configuración específica para macOS - Compatibilidad de versiones
 if(APPLE)
     # Establecer la versión mínima de macOS soportada (macOS 10.15 Catalina)
-    # Esto permite que la app funcione desde macOS 10.15 hasta las versiones más nuevas
+    # Esto permite que la app funcione desde macOS 10.15 hasta las versiones más nuevas, compatible con Qt 6.8.2
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
     
     # Configurar arquitecturas - soporte para Intel y Apple Silicon

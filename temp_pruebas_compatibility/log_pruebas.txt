@@ -1,0 +1,5 @@
+Pruebas de Compatibilidad - Tue Oct  7 20:27:11 -03 2025
+- Compilación: Exitosa con arquitecturas x86_64 y arm64
+- Deployment Target: macOS 10.15+
+- Verificación: Binario universal confirmado con lipo
+- Ejecución: App iniciada correctamente en entorno arm64
