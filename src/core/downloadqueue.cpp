@@ -207,8 +207,11 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     }
     
     // Add cookies from browser for YouTube (helps avoid bot detection)
+    // Only use on macOS where it works reliably, skip on Windows due to DPAPI issues
     if (item.url.contains("youtube.com") || item.url.contains("youtu.be")) {
+#ifndef Q_OS_WIN32
         arguments << "--cookies-from-browser" << "chrome";
+#endif
     }
     
     arguments << item.url;

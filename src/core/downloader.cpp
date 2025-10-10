@@ -97,8 +97,11 @@ void Downloader::downloadVideo(const QString &url)
 #endif
     
     // Add cookies from browser for YouTube (helps avoid bot detection)
+    // Only use on macOS where it works reliably, skip on Windows due to DPAPI issues
     if (url.contains("youtube.com") || url.contains("youtu.be")) {
+#ifndef Q_OS_WIN32
         arguments << "--cookies-from-browser" << "chrome";
+#endif
     }
     
     arguments << url;
