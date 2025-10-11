@@ -2,3 +2,5 @@ build/
 deploy/
 .DS_Store
 installer/
+VimeoDownloader_Installer/
+VimeoDownloader_Installer.tar.gz
