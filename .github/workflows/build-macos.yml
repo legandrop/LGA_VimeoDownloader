@@ -1,0 +1,89 @@
+name: Build macOS Universal
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    strategy:
+      matrix:
+        os: [macos-13, macos-14, macos-15]  # Intel, M1/M2, M3 con diferentes versiones de macOS
+        include:
+          - os: macos-13
+            arch: x86_64
+            qt_version: "6.8.2"
+          - os: macos-14  
+            arch: arm64
+            qt_version: "6.8.2"
+          - os: macos-15
+            arch: arm64
+            qt_version: "6.8.2"
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+      
+    - name: Instalar Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ matrix.qt_version }}
+        host: 'mac'
+        target: 'desktop'
+        arch: 'clang_64'
+        cache: true
+        
+    - name: Configurar entorno de desarrollo
+      run: |
+        echo "Qt instalado en: $Qt6_DIR"
+        export PATH="$Qt6_DIR/bin:$PATH"
+        
+    - name: Crear directorio de build
+      run: mkdir -p build
+      
+    - name: Configurar CMake con soporte universal
+      run: |
+        cd build
+        cmake .. \
+          -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          
+    - name: Compilar aplicación
+      run: |
+        cd build
+        cmake --build . --config Release
+        
+    - name: Crear bundle con dependencias
+      run: |
+        cd build
+        macdeployqt VimeoDownloader.app
+        
+    - name: Copiar herramientas macOS
+      run: |
+        if [ -d "toolsmac" ]; then
+          cp -r toolsmac build/VimeoDownloader.app/Contents/MacOS/
+        fi
+        
+    - name: Verificar arquitecturas
+      run: |
+        echo "Verificando arquitecturas del binario:"
+        lipo -info build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
+        
+    - name: Crear archivo comprimido
+      run: |
+        cd build
+        tar -czf VimeoDownloader-${{ matrix.os }}.tar.gz VimeoDownloader.app
+        
+    - name: Subir artefactos
+      uses: actions/upload-artifact@v4
+      with:
+        name: VimeoDownloader-${{ matrix.os }}
+        path: build/VimeoDownloader-${{ matrix.os }}.tar.gz
+        retention-days: 30
