@@ -34,7 +34,7 @@ export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
 cmake .. \
     -DCMAKE_PREFIX_PATH="$QT_PATH" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
     -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
 cmake --build . --config Release
@@ -75,7 +75,7 @@ cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>
-    <string>10.15.0</string>
+    <string>11.0.0</string>
     <key>LSArchitecturePriority</key>
     <array>
         <string>arm64</string>

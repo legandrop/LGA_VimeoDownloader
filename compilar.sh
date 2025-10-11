@@ -13,7 +13,7 @@ cd build
 # Configurar el proyecto con la ruta correcta de Qt y configuraciones de compatibilidad
 cmake .. -G "Unix Makefiles" \
     -DCMAKE_PREFIX_PATH="$HOME/Qt/6.8.2/macos" \
-    -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
     -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
 # Compilar el proyecto
