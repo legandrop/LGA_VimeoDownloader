@@ -1,11 +1,7 @@
 name: Build macOS Universal
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # Solo ejecución manual
 
 jobs:
   build-macos:
