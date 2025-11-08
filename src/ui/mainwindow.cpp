@@ -100,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_downloadQueue, &DownloadQueue::downloadAddedToQueue, this, &MainWindow::onDownloadAddedToQueue);
     
     // Configurar ventana
-    setWindowTitle("LGA_VimeoDownloader v0.83");
+    setWindowTitle("LGA_VimeoDownloader v0.84");
 
     // Ajustar tamaño inicial y establecer ancho máximo
     adjustWindowSize();
