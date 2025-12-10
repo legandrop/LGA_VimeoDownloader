@@ -12,14 +12,16 @@ echo "Implementando VimeoDownloader..."
 pkill -f VimeoDownloader || echo "No se encontró el proceso VimeoDownloader en ejecución."
 sleep 1
 
-# Verificar que Qt está instalado
-QT_PATH="$HOME/Qt/6.8.2/macos"
+# Verificar que Qt de Homebrew está instalado (compatible con macOS Tahoe)
+QT_PATH="/opt/homebrew"
 if [ ! -d "$QT_PATH" ]; then
-    echo "Error: Qt 6.8.2 no está instalado en $QT_PATH"
+    echo "Error: Qt no está instalado en $QT_PATH (Homebrew)"
     exit 1
 fi
 
-# Añadir Qt al PATH
+# Configurar variables de entorno para Qt de Homebrew
+export CMAKE_PREFIX_PATH="$QT_PATH"
+export Qt6_DIR="$QT_PATH/lib/cmake/Qt6"
 export PATH="$QT_PATH/bin:$PATH"
 
 # Crear directorio de implementación si no existe
@@ -29,13 +31,14 @@ mkdir -p deploy
 mkdir -p build
 cd build
 
-# Configurar con las nuevas opciones de compatibilidad
-export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-cmake .. \
+# Configurar el proyecto con Qt de Homebrew (compatible con macOS Tahoe)
+# Usar solo arquitectura ARM64 ya que Qt de Homebrew solo soporta ARM64
+cmake .. -G "Unix Makefiles" \
     -DCMAKE_PREFIX_PATH="$QT_PATH" \
+    -DQt6_DIR="$QT_PATH/lib/cmake/Qt6" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 \
-    -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+    -DCMAKE_OSX_ARCHITECTURES="arm64"
 
 cmake --build . --config Release
 cd ..
@@ -75,7 +78,7 @@ cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>
-    <string>11.0.0</string>
+    <string>14.0.0</string>
     <key>LSArchitecturePriority</key>
     <array>
         <string>arm64</string>
@@ -102,8 +105,10 @@ cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
 </plist>
 EOL
 
-# Usar macdeployqt para copiar todas las dependencias necesarias
-"$QT_PATH/bin/macdeployqt" deploy/VimeoDownloader.app
+# Nota: macdeployqt tiene problemas con Homebrew Qt en macOS Tahoe
+# La aplicación funcionará sin él si Qt está disponible en el sistema destino
+# "$QT_PATH/bin/macdeployqt" deploy/VimeoDownloader.app
+echo "Omitiendo macdeployqt (problemas conocidos con Homebrew Qt en macOS Tahoe)"
 
 # Crear carpeta toolsmac en deploy y copiar herramientas
 echo ""
@@ -125,4 +130,5 @@ echo
 
 # Ejecutar la aplicación implementada
 echo "Ejecutando VimeoDownloader..."
+export QT_QPA_PLATFORM_PLUGIN_PATH="/opt/homebrew/share/qt/plugins/platforms"
 ./deploy/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
