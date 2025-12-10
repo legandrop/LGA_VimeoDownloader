@@ -3,6 +3,7 @@
 #include "vimeodownloader/colorutils.h"
 #include "vimeodownloader/toolsmanager.h"
 #include "vimeodownloader/downloadqueue.h"
+#include "vimeodownloader/videopassworddialog.h"
 #include <QApplication>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -98,9 +99,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_downloadQueue, &DownloadQueue::downloadCompleted, this, &MainWindow::onDownloadCompleted);
     connect(m_downloadQueue, &DownloadQueue::queueStatusChanged, this, &MainWindow::onQueueStatusChanged);
     connect(m_downloadQueue, &DownloadQueue::downloadAddedToQueue, this, &MainWindow::onDownloadAddedToQueue);
+    connect(m_downloadQueue, &DownloadQueue::videoPasswordRequired, this, &MainWindow::onVideoPasswordRequired);
     
     // Configurar ventana
-    setWindowTitle("LGA_VimeoDownloader v0.84");
+    setWindowTitle("LGA_VimeoDownloader v0.85");
 
     // Ajustar tamaño inicial y establecer ancho máximo
     adjustWindowSize();
@@ -410,14 +412,42 @@ void MainWindow::onDownloadAddedToQueue(int totalCount)
     QString currentTitle = m_progressGroup->title();
     QRegularExpression regex("Progress \\((\\d+)/(\\d+)\\)");
     QRegularExpressionMatch match = regex.match(currentTitle);
-    
+
     int currentNumber = 0;
     if (match.hasMatch()) {
         currentNumber = match.captured(1).toInt();
     }
-    
+
     // Update only the total count, keep current number
     m_progressGroup->setTitle(QString("Progress (%1/%2)").arg(currentNumber).arg(totalCount));
+}
+
+void MainWindow::onVideoPasswordRequired(const DownloadItem &item)
+{
+    // Show video password dialog
+    VideoPasswordDialog dialog(item.url, this);
+    int result = dialog.exec();
+
+    if (result == QDialog::Accepted) {
+        QString videoPassword = dialog.getVideoPassword();
+        if (!videoPassword.isEmpty()) {
+            // Retry download with video password
+            m_downloadQueue->retryDownloadWithVideoPassword(videoPassword);
+            return;
+        }
+    }
+
+    // If dialog was cancelled or password was empty, mark download as failed
+    // We need to manually handle the failure since we intercepted the normal flow
+    m_logOutput->append("ERROR: Video password not provided or download cancelled");
+
+    // Manually trigger the next download processing
+    QTimer::singleShot(1000, [this]() {
+        if (m_downloadQueue) {
+            // Reset current download state and continue
+            QMetaObject::invokeMethod(m_downloadQueue, "processNextDownload", Qt::QueuedConnection);
+        }
+    });
 }
 
 void MainWindow::onCancelClicked()

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(VimeoDownloader VERSION 1.0.0 LANGUAGES CXX)
+project(VimeoDownloader VERSION 0.85 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -79,6 +79,7 @@ endif()
 set(SOURCES
     src/main.cpp
     src/ui/mainwindow.cpp
+    src/ui/videopassworddialog.cpp
     src/core/downloader.cpp
     src/core/downloadqueue.cpp
     src/utils/colorutils.cpp
@@ -88,6 +89,7 @@ set(SOURCES
 # Archivos de cabecera
 set(HEADERS
     include/vimeodownloader/mainwindow.h
+    include/vimeodownloader/videopassworddialog.h
     include/vimeodownloader/downloader.h
     include/vimeodownloader/colorutils.h
     include/vimeodownloader/toolsmanager.h

@@ -14,6 +14,7 @@
 
 class ToolsManager;
 class DownloadQueue;
+struct DownloadItem;
 
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
@@ -43,6 +44,7 @@ private slots:
     void onCancelClicked();
     void onLogToggleClicked();
     void onSettingsToggleClicked();
+    void onVideoPasswordRequired(const DownloadItem &item);
 
 private:
     void setupUI();

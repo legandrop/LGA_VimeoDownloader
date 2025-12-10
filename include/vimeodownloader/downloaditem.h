@@ -16,6 +16,7 @@ struct DownloadItem {
     QString url;
     QString username;
     QString password;
+    QString videoPassword;
     QString downloadDir;
     QString title;
     DownloadStatus status;
@@ -25,16 +26,28 @@ struct DownloadItem {
     int progress;
     QString errorMessage;
     
-    DownloadItem() 
+    DownloadItem()
         : status(DownloadStatus::Pending)
         , addedTime(QDateTime::currentDateTime())
-        , progress(0) 
+        , progress(0)
     {}
-    
+
     DownloadItem(const QString &url, const QString &user, const QString &pass, const QString &dir)
         : url(url)
         , username(user)
         , password(pass)
+        , videoPassword("")
+        , downloadDir(dir)
+        , status(DownloadStatus::Pending)
+        , addedTime(QDateTime::currentDateTime())
+        , progress(0)
+    {}
+
+    DownloadItem(const QString &url, const QString &user, const QString &pass, const QString &videoPass, const QString &dir)
+        : url(url)
+        , username(user)
+        , password(pass)
+        , videoPassword(videoPass)
         , downloadDir(dir)
         , status(DownloadStatus::Pending)
         , addedTime(QDateTime::currentDateTime())

@@ -24,6 +24,7 @@ public:
 
     // Queue management
     void addDownload(const QString &url, const QString &username, const QString &password, const QString &downloadDir);
+    void retryDownloadWithVideoPassword(const QString &videoPassword);
     void startQueue();
     void pauseQueue();
     void clearQueue();
@@ -49,6 +50,7 @@ signals:
     void queueFinished();
     void queueStatusChanged(int current, int total);
     void downloadAddedToQueue(int totalCount);
+    void videoPasswordRequired(const DownloadItem &item);
 
 private slots:
     void processNextDownload();

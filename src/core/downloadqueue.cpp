@@ -31,25 +31,39 @@ DownloadQueue::~DownloadQueue()
 void DownloadQueue::addDownload(const QString &url, const QString &username, const QString &password, const QString &downloadDir)
 {
     QMutexLocker locker(&m_queueMutex);
-    
+
     DownloadItem item(url, username, password, downloadDir);
     m_queue.enqueue(item);
     m_totalCount++;
-    
+
     updateProgressLabel();
-    
+
     logMessage(QString("=== Download Added to Queue ==="));
     logMessage(QString("URL: %1").arg(url));
     logMessage(QString("Queue position: %1 of %2").arg(m_queue.size()).arg(m_totalCount));
     logMessage("---");
-    
+
     // Emit signal for total count update, but don't change current number
     emit downloadAddedToQueue(m_totalCount);
-    
+
     // Auto-start queue if not running
     if (!m_isRunning && !m_isPaused) {
         QTimer::singleShot(100, this, &DownloadQueue::startQueue);
     }
+}
+
+void DownloadQueue::retryDownloadWithVideoPassword(const QString &videoPassword)
+{
+    if (!m_hasCurrentDownload) return;
+
+    // Set the video password and retry the download
+    m_currentDownload.videoPassword = videoPassword;
+    m_currentDownload.errorMessage.clear();
+    m_currentDownload.status = DownloadStatus::Downloading;
+    m_currentDownload.startTime = QDateTime::currentDateTime();
+
+    logMessage(QString("Retrying download with video password..."));
+    startDownloadProcess(m_currentDownload);
 }
 
 void DownloadQueue::startQueue()
@@ -190,12 +204,23 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
         arguments << "-u" << item.username;
         arguments << "-p" << item.password;
     }
+
+    // Add video password if provided
+    if (!item.videoPassword.isEmpty()) {
+        arguments << "--video-password" << item.videoPassword;
+    }
     
     // Use a safer output template that avoids problematic characters
     arguments << "--output" << item.downloadDir + "/%(title).200s.%(ext)s";
     arguments << "--restrict-filenames"; // Restrict filenames to ASCII characters
-    // Use QuickTime-compatible formats: H.264 video + AAC audio, fallback to best H.264
-    arguments << "--format" << "bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[acodec^=mp4a][ext=m4a]/best[vcodec^=avc1][ext=mp4]";
+
+    // For Vimeo videos, don't specify restrictive format - let yt-dlp choose best available
+    // This handles cases where only HLS streaming formats are available
+    if (!item.url.contains("vimeo.com", Qt::CaseInsensitive)) {
+        // For non-Vimeo sites (like YouTube), use MP4-preferred formats
+        arguments << "--format" << "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best";
+    }
+    // For Vimeo, omit --format entirely to let yt-dlp choose the best available format
     
     // Add ffmpeg location for proper merging
     QString ffmpegPath = m_toolsManager->getFfmpegPath();
@@ -349,12 +374,12 @@ void DownloadQueue::onDownloadError()
 void DownloadQueue::onDownloadFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     if (!m_hasCurrentDownload) return;
-    
+
     // Deactivate progress bar and hide percentage text
     m_progressBar->setTextVisible(false);
     m_progressBar->setValue(0);
     m_currentDownload.finishTime = QDateTime::currentDateTime();
-    
+
     if (exitStatus == QProcess::CrashExit) {
         m_currentDownload.status = DownloadStatus::Failed;
         if (m_currentDownload.errorMessage.isEmpty()) {
@@ -368,25 +393,36 @@ void DownloadQueue::onDownloadFinished(int exitCode, QProcess::ExitStatus exitSt
         logMessage("=== Download completed successfully ===");
         emit downloadCompleted(m_currentDownload);
     } else {
-        m_currentDownload.status = DownloadStatus::Failed;
-        if (m_currentDownload.errorMessage.isEmpty()) {
-            m_currentDownload.errorMessage = QString("Process finished with error code: %1").arg(exitCode);
+        // Check if the error is about video password protection
+        bool isVideoPasswordError = m_currentDownload.errorMessage.contains("This video is protected by a password", Qt::CaseInsensitive) ||
+                                   m_currentDownload.errorMessage.contains("--video-password", Qt::CaseInsensitive);
+
+        if (isVideoPasswordError && m_currentDownload.videoPassword.isEmpty()) {
+            // Show video password dialog and retry
+            logMessage("Video password required. Showing password dialog...");
+            emit videoPasswordRequired(m_currentDownload);
+            return; // Don't mark as failed yet, will retry after password is entered
+        } else {
+            m_currentDownload.status = DownloadStatus::Failed;
+            if (m_currentDownload.errorMessage.isEmpty()) {
+                m_currentDownload.errorMessage = QString("Process finished with error code: %1").arg(exitCode);
+            }
+            logMessage(QString("ERROR: yt-dlp finished with error code: %1").arg(exitCode));
+            emit downloadFailed(m_currentDownload, m_currentDownload.errorMessage);
         }
-        logMessage(QString("ERROR: yt-dlp finished with error code: %1").arg(exitCode));
-        emit downloadFailed(m_currentDownload, m_currentDownload.errorMessage);
     }
-    
+
     // Add to completed downloads
     m_completedDownloads.append(m_currentDownload);
     m_completedCount++;
     m_hasCurrentDownload = false;
-    
+
     updateProgressLabel();
     emit queueStatusChanged(m_completedCount, m_totalCount);
-    
+
     // Clean up process
     cleanupCurrentProcess();
-    
+
     // Process next download after a short delay
     QTimer::singleShot(1000, this, &DownloadQueue::processNextDownload);
 }

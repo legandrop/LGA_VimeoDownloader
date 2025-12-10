@@ -2,6 +2,19 @@
 
 Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube usando yt-dlp con sistema de cola de descargas. **Completamente portable** - incluye todas las herramientas necesarias.
 
+## Historial de Versiones
+
+### v1.0.1 (10 Dic 2025)
+- ✅ **Corregido**: Problema con videos de Vimeo protegidos por contraseña
+  - **Problema**: Videos de Vimeo con password requerido fallaban con "Requested format is not available"
+  - **Causa**: El formato MP4 restrictivo no estaba disponible en algunos videos que solo ofrecen HLS streaming
+  - **Solución**: Para videos de Vimeo, ahora se omite la especificación de formato y se deja que yt-dlp elija el mejor disponible automáticamente
+- ✅ **Mejorado**: Diálogo modal para solicitar contraseña de video cuando es requerida
+- ✅ **Corregido**: Compatibilidad con diferentes tipos de formatos de Vimeo (MP4/HLS)
+
+### v1.0.0 (Inicial)
+- Versión inicial con soporte básico para Vimeo y YouTube
+
 ## Características
 
 - **Interfaz gráfica moderna** con tema oscuro (basado en el estilo de PipeSync)
@@ -134,7 +147,11 @@ La aplicación ejecuta internamente comandos optimizados:
 
 **Para Vimeo (con credenciales):**
 ```bash
-yt-dlp -u "usuario@email.com" -p "contraseña" --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
+# Para videos estándar con formatos MP4 disponibles:
+yt-dlp -u "usuario@email.com" -p "contraseña" --video-password "password_video" --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
+
+# Para videos que solo ofrecen HLS streaming (se omite --format):
+yt-dlp -u "usuario@email.com" -p "contraseña" --video-password "password_video" --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
 ```
 
 **Para YouTube (sin credenciales, con cookies automáticas):**
@@ -144,7 +161,9 @@ yt-dlp --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --fo
 
 ### Características técnicas
 
-- **Formatos QuickTime**: Descarga directamente en MP4 con H.264 + AAC (compatible con QuickTime, Preview, VLC)
+- **Formatos adaptativos**: Para YouTube usa MP4 preferido, para Vimeo deja que yt-dlp elija el mejor formato disponible (MP4 o HLS)
+- **Soporte completo para Vimeo**: Incluye videos con contraseña y diferentes tipos de formato (MP4/HLS streaming)
+- **Formatos QuickTime**: Descarga directamente en MP4 con H.264 + AAC cuando disponible (compatible con QuickTime, Preview, VLC)
 - **Nombres seguros**: `--restrict-filenames` convierte caracteres especiales a ASCII seguro
 - **Herramientas locales**: yt-dlp y ffmpeg incluidos en la aplicación (toolsmac/ en macOS, tools/ en Windows)
 - **Sin recodificación**: Los videos se descargan directamente en formatos compatibles
