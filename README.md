@@ -2,19 +2,6 @@
 
 Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube usando yt-dlp con sistema de cola de descargas. **Completamente portable** - incluye todas las herramientas necesarias.
 
-## Historial de Versiones
-
-### v1.0.1 (10 Dic 2025)
-- ✅ **Corregido**: Problema con videos de Vimeo protegidos por contraseña
-  - **Problema**: Videos de Vimeo con password requerido fallaban con "Requested format is not available"
-  - **Causa**: El formato MP4 restrictivo no estaba disponible en algunos videos que solo ofrecen HLS streaming
-  - **Solución**: Para videos de Vimeo, ahora se omite la especificación de formato y se deja que yt-dlp elija el mejor disponible automáticamente
-- ✅ **Mejorado**: Diálogo modal para solicitar contraseña de video cuando es requerida
-- ✅ **Corregido**: Compatibilidad con diferentes tipos de formatos de Vimeo (MP4/HLS)
-
-### v1.0.0 (Inicial)
-- Versión inicial con soporte básico para Vimeo y YouTube
-
 ## Características
 
 - **Interfaz gráfica moderna** con tema oscuro (basado en el estilo de PipeSync)
@@ -22,7 +9,8 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
 - **Sistema de cola de descargas** - procesa múltiples descargas secuencialmente
 - **Contador persistente** - rastrea descargas completadas durante la sesión
 - **Descarga usando yt-dlp + ffmpeg** con credenciales de usuario
-- **Herramientas locales** - yt-dlp y ffmpeg incluidos en la aplicación (no requiere instalación global)
+- **Herramientas locales** - yt-dlp, ffmpeg y deno incluidos en la aplicación (no requiere instalación global)
+- **YouTube robusto** - cookies de Chrome + runtime JS (Deno) para resolver challenges y acceder a formatos completos
 - **Formatos compatibles con QuickTime** - descarga directamente en MP4 con H.264 + AAC
 - **Configuración persistente** - guarda credenciales de Vimeo de forma segura
 - **Log en tiempo real** - muestra todo el proceso de descarga
@@ -33,7 +21,7 @@ Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube 
 ## Requisitos
 
 ### Para usar la aplicación:
-- **Completamente autónoma** - Incluye yt-dlp y ffmpeg en el paquete de la aplicación
+- **Completamente autónoma** - Incluye yt-dlp, ffmpeg y deno en el paquete de la aplicación
 - **No requiere instalación previa** - Las herramientas se descargan automáticamente si es necesario
   ```bash
   # Las herramientas se incluyen automáticamente:
@@ -99,7 +87,7 @@ VimeoDownloader/
 │   └── icons/
 ├── cmake/                  # Archivos de configuración CMake
 ├── tools/                  # Herramientas externas Windows (yt-dlp.exe, ffmpeg.exe)
-├── toolsmac/               # Herramientas externas macOS (yt-dlp, ffmpeg)
+├── toolsmac/               # Herramientas externas macOS (yt-dlp, ffmpeg, deno)
 ├── build/                  # Carpeta de compilación (generada)
 └── deploy/                 # Versión portable (generada)
 ```
@@ -154,9 +142,9 @@ yt-dlp -u "usuario@email.com" -p "contraseña" --video-password "password_video"
 yt-dlp -u "usuario@email.com" -p "contraseña" --video-password "password_video" --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --ffmpeg-location "/ruta/a/ffmpeg" "URL_DE_VIMEO"
 ```
 
-**Para YouTube (sin credenciales, con cookies automáticas):**
+**Para YouTube (sin credenciales, con cookies automáticas y runtime JS):**
 ```bash
-yt-dlp --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --ffmpeg-location "/ruta/a/ffmpeg" --cookies-from-browser chrome "URL_DE_YOUTUBE"
+yt-dlp --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --format "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]" --ffmpeg-location "/ruta/a/ffmpeg" --cookies-from-browser chrome --js-runtimes "deno:/ruta/a/deno" "URL_DE_YOUTUBE"
 ```
 
 ### Características técnicas
@@ -165,7 +153,7 @@ yt-dlp --output "/ruta/descarga/%(title).200s.%(ext)s" --restrict-filenames --fo
 - **Soporte completo para Vimeo**: Incluye videos con contraseña y diferentes tipos de formato (MP4/HLS streaming)
 - **Formatos QuickTime**: Descarga directamente en MP4 con H.264 + AAC cuando disponible (compatible con QuickTime, Preview, VLC)
 - **Nombres seguros**: `--restrict-filenames` convierte caracteres especiales a ASCII seguro
-- **Herramientas locales**: yt-dlp y ffmpeg incluidos en la aplicación (toolsmac/ en macOS, tools/ en Windows)
+- **Herramientas locales**: yt-dlp, ffmpeg y deno incluidos en la aplicación (toolsmac/ en macOS, tools/ en Windows)
 - **Sin recodificación**: Los videos se descargan directamente en formatos compatibles
 
 ### Sistema de Cola de Descargas

@@ -1,6 +1,6 @@
 [Setup] 
 AppName=VimeoDownloader 
-AppVersion=0.85 
+AppVersion=0.86 
 DefaultDirName=C:\Portable\LGA\VimeoDownloader 
 DefaultGroupName=VimeoDownloader 
 UninstallDisplayIcon={app}\VimeoDownloader.exe 

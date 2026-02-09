@@ -6,13 +6,14 @@ This document explains the differences in yt-dlp and ffmpeg installation and man
 
 ### Detection Method
 - **Primary**: Checks for binaries in `toolsmac/` subdirectory within the application bundle
-- **No fallbacks**: Uses only local tools (completely self-contained)
+- **Fallbacks**: Homebrew locations → system PATH if local tools are missing
 
 ### Installation Method
-- **Install**: Downloads binaries directly from GitHub/evermeet.cx to `toolsmac/` subdirectory
-- **Update**: Downloads latest yt-dlp and replaces existing file (ffmpeg not updated)
+- **Install**: Downloads binaries directly to `toolsmac/` subdirectory
+- **Update**: Downloads latest yt-dlp and deno (ffmpeg not updated)
 - **yt-dlp**: `https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos`
 - **ffmpeg**: `https://evermeet.cx/ffmpeg/getrelease/zip` (extracted automatically)
+- **deno**: `https://github.com/denoland/deno/releases/latest/download/deno-<arch>-apple-darwin.zip` (extracted automatically)
 
 ### Requirements
 - Internet connection for download
@@ -23,9 +24,10 @@ This document explains the differences in yt-dlp and ffmpeg installation and man
 - ✅ Fully implemented and tested
 - ✅ Detection working (local binaries prioritized)
 - ✅ Installation working (direct download)
-- ✅ Updates working (yt-dlp only)
+- ✅ Updates working (yt-dlp + deno)
 - ✅ **Completely portable** (no Homebrew required)
 - ✅ **QuickTime compatible** formats by default
+- ✅ **YouTube JS challenges supported** (deno runtime)
 
 ---
 
@@ -78,7 +80,7 @@ Could use similar approaches to macOS/Windows:
 |---------|-------|---------|-------|
 | Detection | toolsmac/ → Homebrew → PATH | tools/ subdirectory | Not implemented |
 | Installation | GitHub/evermeet.cx → toolsmac/ | GitHub → tools/ | Not implemented |
-| Updates | yt-dlp auto, ffmpeg manual | yt-dlp auto, ffmpeg manual | Not implemented |
+| Updates | yt-dlp + deno auto, ffmpeg manual | yt-dlp auto, ffmpeg manual | Not implemented |
 | Dependencies | None (self-contained) | None (self-contained) | Not implemented |
 | Status | ✅ Fully working | ✅ Fully working | ❌ Not implemented |
 
@@ -94,7 +96,8 @@ VimeoDownloader.app/
         ├── VimeoDownloader
         └── toolsmac/
             ├── yt-dlp
-            └── ffmpeg
+            ├── ffmpeg
+            └── deno
 ```
 
 ### Windows
@@ -124,6 +127,7 @@ YouTube videos often come in separate audio and video streams that need to be me
 |---------|-------|---------|
 | **Authentication** | Username + Password required | No credentials needed |
 | **Bot Detection** | Minimal | Requires browser cookies |
+| **JS Challenge** | None | Requires JS runtime (deno) |
 | **Format Selection** | `bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]` | `bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]` |
 | **ffmpeg Location** | `--ffmpeg-location` required | `--ffmpeg-location` required |
 | **Cookies** | Not needed | `--cookies-from-browser chrome` |
@@ -134,7 +138,7 @@ YouTube videos often come in separate audio and video streams that need to be me
 
 | Platform | yt-dlp | ffmpeg | YouTube Support | Notes |
 |----------|--------|--------|-----------------|-------|
-| macOS | ✅ Local | ✅ Local | ✅ Full | QuickTime-compatible formats, no Homebrew |
+| macOS | ✅ Local | ✅ Local | ✅ Full | QuickTime-compatible formats, JS runtime incluido |
 | Windows | ✅ Local | ✅ Local | ✅ Full | Standard videos work automatically |
 | Linux | ❌ Manual | ❌ Manual | ⚠️ Manual | Requires manual setup |
 
@@ -150,14 +154,14 @@ Requirements:
 - Chrome browser installed on the system
 - User has visited YouTube in Chrome (to have cookies available)
 
-The application automatically detects YouTube URLs and adds `--cookies-from-browser chrome` to the yt-dlp command.
+The application automatically detects YouTube URLs and adds `--cookies-from-browser chrome` and `--js-runtimes deno:...` to the yt-dlp command.
 
 ---
 
 ## Installation Process Flow
 
 ### macOS
-1. Check `toolsmac/yt-dlp` and `toolsmac/ffmpeg` (local binaries)
+1. Check `toolsmac/yt-dlp`, `toolsmac/ffmpeg` y `toolsmac/deno` (local binaries)
 2. If missing, download from GitHub/evermeet.cx to `toolsmac/` subdirectory
 3. Extract and set executable permissions
 4. **Ready to use** (completely self-contained, no Homebrew required)

@@ -79,9 +79,9 @@ cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>1.0.0</string>
+    <string>0.86</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>0.86</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>

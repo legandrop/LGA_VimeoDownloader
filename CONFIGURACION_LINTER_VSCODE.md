@@ -28,6 +28,28 @@ Crea el archivo `.vscode/c_cpp_properties.json` con el siguiente contenido:
 {
     "configurations": [
         {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/opt/qt/include/**",
+                "/opt/homebrew/opt/qt/include/QtCore",
+                "/opt/homebrew/opt/qt/include/QtGui",
+                "/opt/homebrew/opt/qt/include/QtWidgets",
+                "/opt/homebrew/opt/qt/include/QtNetwork",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src"
+            ],
+            "macFrameworkPath": [
+                "/opt/homebrew/opt/qt/lib",
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
@@ -221,23 +243,28 @@ Este archivo define asociaciones de archivos para que VSCode reconozca correctam
 "C:/Qt/Tools/mingw810_64/bin/g++.exe"
 ```
 
-### Para macOS:
+### Para macOS (Homebrew):
 ```json
 {
     "name": "Mac",
     "includePath": [
         "${workspaceFolder}/**",
-        "/Users/username/Qt/6.8.2/macos/include/**",
-        "/Users/username/Qt/6.8.2/macos/include/QtCore",
-        "/Users/username/Qt/6.8.2/macos/include/QtGui",
-        "/Users/username/Qt/6.8.2/macos/include/QtWidgets",
-        "/Users/username/Qt/6.8.2/macos/include/QtNetwork",
+        "/opt/homebrew/opt/qt/include/**",
+        "/opt/homebrew/opt/qt/include/QtCore",
+        "/opt/homebrew/opt/qt/include/QtGui",
+        "/opt/homebrew/opt/qt/include/QtWidgets",
+        "/opt/homebrew/opt/qt/include/QtNetwork",
         "${workspaceFolder}/include",
         "${workspaceFolder}/src"
     ],
+    "macFrameworkPath": [
+        "/opt/homebrew/opt/qt/lib",
+        "/System/Library/Frameworks",
+        "/Library/Frameworks"
+    ],
     "compilerPath": "/usr/bin/clang++",
     "cppStandard": "c++17",
-    "intelliSenseMode": "macos-clang-x64"
+    "intelliSenseMode": "macos-clang-arm64"
 }
 ```
 
