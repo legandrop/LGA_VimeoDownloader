@@ -236,6 +236,16 @@ void DownloadQueue::startDownloadProcess(const DownloadItem &item)
     if (item.url.contains("youtube.com") || item.url.contains("youtu.be")) {
 #ifndef Q_OS_WIN32
         arguments << "--cookies-from-browser" << "chrome";
+#ifdef Q_OS_MAC
+        if (m_toolsManager && m_toolsManager->isDenoInstalled()) {
+            QString denoPath = m_toolsManager->getDenoPath();
+            if (!denoPath.isEmpty()) {
+                arguments << "--js-runtimes" << QString("deno:%1").arg(denoPath);
+            }
+        } else {
+            logMessage("WARNING: Deno runtime not found; YouTube downloads may fail due to JS challenges.");
+        }
+#endif
 #endif
     }
     

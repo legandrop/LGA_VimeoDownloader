@@ -14,12 +14,19 @@ cd build
 # Usar solo arquitectura ARM64 ya que Qt de Homebrew solo soporta ARM64
 export CMAKE_PREFIX_PATH="/opt/homebrew"
 export Qt6_DIR="/opt/homebrew/lib/cmake/Qt6"
+SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+if [ -d "$SDK_PATH" ]; then
+    export SDKROOT="$SDK_PATH"
+else
+    echo "Advertencia: SDK de macOS no encontrado vía xcrun."
+fi
 
 cmake .. -G "Unix Makefiles" \
     -DCMAKE_PREFIX_PATH="/opt/homebrew" \
     -DQt6_DIR="/opt/homebrew/lib/cmake/Qt6" \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
-    -DCMAKE_OSX_ARCHITECTURES="arm64"
+    -DCMAKE_OSX_ARCHITECTURES="arm64" \
+    -DCMAKE_OSX_SYSROOT="$SDK_PATH"
 
 # Compilar el proyecto
 cmake --build .

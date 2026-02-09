@@ -23,6 +23,12 @@ fi
 export CMAKE_PREFIX_PATH="$QT_PATH"
 export Qt6_DIR="$QT_PATH/lib/cmake/Qt6"
 export PATH="$QT_PATH/bin:$PATH"
+SDK_PATH="$(xcrun --sdk macosx --show-sdk-path)"
+if [ -d "$SDK_PATH" ]; then
+    export SDKROOT="$SDK_PATH"
+else
+    echo "Advertencia: SDK de macOS no encontrado vía xcrun."
+fi
 
 # Crear directorio de implementación si no existe
 mkdir -p deploy
@@ -38,7 +44,8 @@ cmake .. -G "Unix Makefiles" \
     -DQt6_DIR="$QT_PATH/lib/cmake/Qt6" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
-    -DCMAKE_OSX_ARCHITECTURES="arm64"
+    -DCMAKE_OSX_ARCHITECTURES="arm64" \
+    -DCMAKE_OSX_SYSROOT="$SDK_PATH"
 
 cmake --build . --config Release
 cd ..

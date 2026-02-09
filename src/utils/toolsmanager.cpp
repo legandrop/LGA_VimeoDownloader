@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QStandardPaths>
 #include <QStyle>
+#include <QSysInfo>
 #include <QTimer>
 
 ToolsManager::ToolsManager(QTextEdit *logOutput, QPushButton *toolsButton, QObject *parent)
@@ -14,6 +15,7 @@ ToolsManager::ToolsManager(QTextEdit *logOutput, QPushButton *toolsButton, QObje
     , m_toolsButton(toolsButton)
     , m_ytDlpInstalled(false)
     , m_ffmpegInstalled(false)
+    , m_denoInstalled(false)
     , m_checkingTools(false)
     , m_networkManager(nullptr)
     , m_pendingProcesses(0)
@@ -42,6 +44,7 @@ void ToolsManager::checkToolsInstallation()
     logMessage("Checking tools installation...");
     
     // Check both tools
+    checkDenoInstallation();
     checkYtDlpInstallation();
     checkFfmpegInstallation();
 }
@@ -378,11 +381,126 @@ void ToolsManager::checkFfmpegInstallation()
 #endif
 }
 
+void ToolsManager::checkDenoInstallation()
+{
+#ifdef Q_OS_MAC
+    // macOS: Check if deno exists in the toolsmac subdirectory first, then fallback to system
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString denoPath = appDir + "/toolsmac/deno";
+    
+    if (QFile::exists(denoPath)) {
+        m_denoInstalled = true;
+        logMessage("✓ deno found in toolsmac directory");
+        
+        if (m_pendingProcesses == 0) {
+            QTimer::singleShot(100, this, &ToolsManager::updateButtonState);
+        }
+        return;
+    }
+    
+    // Fallback: Check in common Homebrew locations first, then PATH
+    QStringList possiblePaths = {
+        "/opt/homebrew/bin/deno",  // Apple Silicon Homebrew
+        "/usr/local/bin/deno",    // Intel Homebrew
+        "deno"                    // System PATH (fallback)
+    };
+    
+    QString foundPath;
+    for (const QString &path : possiblePaths) {
+        if (path == "deno") {
+            // Try PATH version
+            break;
+        } else if (QFile::exists(path)) {
+            foundPath = path;
+            break;
+        }
+    }
+    
+    if (!foundPath.isEmpty()) {
+        // Found in Homebrew location, verify it works
+        m_pendingProcesses++;
+        QProcess *process = new QProcess(this);
+        
+        connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                [this, process, foundPath](int exitCode, QProcess::ExitStatus exitStatus) {
+            
+            if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                m_denoInstalled = true;
+                logMessage(QString("✓ deno found at: %1").arg(foundPath));
+            } else {
+                m_denoInstalled = false;
+                logMessage("✗ deno found but not working properly");
+            }
+            
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            
+            process->deleteLater();
+        });
+        
+        process->start(foundPath, QStringList() << "--version");
+        
+        if (!process->waitForStarted(3000)) {
+            m_denoInstalled = false;
+            logMessage("✗ deno found but failed to start");
+            m_pendingProcesses--;
+            if (m_pendingProcesses == 0) {
+                updateButtonState();
+            }
+            process->deleteLater();
+        }
+        return;
+    }
+    
+    // Fallback to PATH check
+    m_pendingProcesses++;
+    QProcess *process = new QProcess(this);
+    
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
+        
+        if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+            m_denoInstalled = true;
+            logMessage("✓ deno is installed and available");
+        } else {
+            m_denoInstalled = false;
+            logMessage("✗ deno is not installed");
+        }
+        
+        m_pendingProcesses--;
+        if (m_pendingProcesses == 0) {
+            updateButtonState();
+        }
+        
+        process->deleteLater();
+    });
+    
+    process->start("deno", QStringList() << "--version");
+    
+    if (!process->waitForStarted(3000)) {
+        m_denoInstalled = false;
+        logMessage("✗ deno is not installed");
+        m_pendingProcesses--;
+        if (m_pendingProcesses == 0) {
+            updateButtonState();
+        }
+        process->deleteLater();
+    }
+#else
+    m_denoInstalled = false;
+#endif
+}
+
 void ToolsManager::updateButtonState()
 {
     m_checkingTools = false;
     
     bool allInstalled = m_ytDlpInstalled && m_ffmpegInstalled;
+#ifdef Q_OS_MAC
+    allInstalled = allInstalled && m_denoInstalled;
+#endif
     
     if (allInstalled) {
         setButtonText("Update dlp");
@@ -398,7 +516,11 @@ void ToolsManager::updateButtonState()
 
 bool ToolsManager::areToolsInstalled() const
 {
+#ifdef Q_OS_MAC
+    return m_ytDlpInstalled && m_ffmpegInstalled && m_denoInstalled;
+#else
     return m_ytDlpInstalled && m_ffmpegInstalled;
+#endif
 }
 
 void ToolsManager::installOrUpdateTools()
@@ -443,6 +565,7 @@ void ToolsManager::onInstallUpdateClicked()
     if (allInstalled) {
         logMessage("=== Updating Tools ===");
         logMessage("Downloading latest yt-dlp from GitHub...");
+        logMessage("Downloading Deno runtime for JS challenges...");
         // Note: ffmpeg is not updated on macOS - only downloaded once
     } else {
         logMessage("=== Installing Tools ===");
@@ -452,6 +575,9 @@ void ToolsManager::onInstallUpdateClicked()
         if (!m_ffmpegInstalled) {
             logMessage("Downloading ffmpeg from evermeet.cx...");
         }
+        if (!m_denoInstalled) {
+            logMessage("Downloading Deno runtime for JS challenges...");
+        }
     }
     
     // Start downloads
@@ -460,6 +586,9 @@ void ToolsManager::onInstallUpdateClicked()
     }
     if (!m_ffmpegInstalled) {
         downloadFfmpegMac();
+    }
+    if (!m_denoInstalled || allInstalled) {
+        downloadDenoMac();
     }
     return;
 #endif
@@ -674,6 +803,121 @@ void ToolsManager::downloadFfmpegMac()
 #endif
 }
 
+void ToolsManager::downloadDenoMac()
+{
+#ifdef Q_OS_MAC
+    QString arch = QSysInfo::currentCpuArchitecture().toLower();
+    QString assetName = (arch.contains("arm") || arch.contains("aarch64"))
+        ? "deno-aarch64-apple-darwin.zip"
+        : "deno-x86_64-apple-darwin.zip";
+    QString url = "https://github.com/denoland/deno/releases/latest/download/" + assetName;
+    QNetworkRequest request(url);
+    
+    // Set user agent
+    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    
+    logMessage(QString("Downloading deno from: %1").arg(url));
+    
+    // Start download
+    QNetworkReply *reply = m_networkManager->get(request);
+    
+    connect(reply, &QNetworkReply::downloadProgress, [this](qint64 received, qint64 total) {
+        if (total > 0) {
+            int percentage = (received * 100) / total;
+            logMessage(QString("deno download progress: %1% (%2 / %3 bytes)")
+                       .arg(percentage)
+                       .arg(received)
+                       .arg(total));
+        }
+    });
+    
+    connect(reply, &QNetworkReply::finished, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            // Save the downloaded zip file temporarily
+            QString appDir = QCoreApplication::applicationDirPath();
+            QString toolsDir = appDir + "/toolsmac";
+            
+            // Create toolsmac directory if it doesn't exist
+            QDir dir;
+            if (!dir.exists(toolsDir)) {
+                if (!dir.mkpath(toolsDir)) {
+                    logMessage("ERROR: Could not create toolsmac directory");
+                    setButtonEnabled(true);
+                    reply->deleteLater();
+                    return;
+                }
+            }
+            
+            QString tempZipPath = toolsDir + "/deno_temp.zip";
+            QString denoPath = toolsDir + "/deno";
+            
+            // Save zip file
+            QFile zipFile(tempZipPath);
+            if (zipFile.open(QIODevice::WriteOnly)) {
+                zipFile.write(reply->readAll());
+                zipFile.close();
+                
+                // Extract deno binary using system unzip command
+                QProcess *unzipProcess = new QProcess(this);
+                connect(unzipProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                        [this, unzipProcess, tempZipPath, denoPath](int exitCode, QProcess::ExitStatus exitStatus) {
+                    
+                    // Clean up zip file
+                    QFile::remove(tempZipPath);
+                    
+                    if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                        // Make deno executable
+                        QFile denoFile(denoPath);
+                        if (denoFile.exists()) {
+                            denoFile.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner |
+                                                   QFile::ReadGroup | QFile::ExeGroup |
+                                                   QFile::ReadOther | QFile::ExeOther);
+                            
+                            logMessage("=== deno downloaded and extracted successfully ===");
+                            logMessage(QString("Saved to: %1").arg(denoPath));
+                            
+                            // Check installation after extraction
+                            QTimer::singleShot(500, [this]() {
+                                checkToolsInstallation();
+                            });
+                        } else {
+                            logMessage("ERROR: deno binary not found after extraction");
+                            setButtonEnabled(true);
+                        }
+                    } else {
+                        logMessage("ERROR: Failed to extract deno zip file");
+                        setButtonEnabled(true);
+                    }
+                    
+                    unzipProcess->deleteLater();
+                });
+                
+                // Extract only the deno binary from the zip
+                unzipProcess->start("unzip", QStringList() << "-j" << tempZipPath << "deno" << "-d" << toolsDir);
+                
+                if (!unzipProcess->waitForStarted(5000)) {
+                    logMessage("ERROR: Could not start unzip process");
+                    QFile::remove(tempZipPath);
+                    setButtonEnabled(true);
+                    unzipProcess->deleteLater();
+                }
+            } else {
+                logMessage("ERROR: Could not save deno zip file");
+                logMessage("Check write permissions in application directory");
+                setButtonEnabled(true);
+            }
+        } else {
+            logMessage("ERROR: Failed to download deno");
+            logMessage(QString("Error: %1").arg(reply->errorString()));
+            logMessage("Please check your internet connection");
+            setButtonEnabled(true);
+        }
+        
+        reply->deleteLater();
+    });
+#endif
+}
+
 void ToolsManager::updateFfmpegMac()
 {
 #ifdef Q_OS_MAC
@@ -855,6 +1099,23 @@ QString ToolsManager::getFfmpegPath() const
 #else
     // Linux: Use system PATH
     return "ffmpeg";
+#endif
+}
+
+QString ToolsManager::getDenoPath() const
+{
+#ifdef Q_OS_MAC
+    // macOS: Check toolsmac directory first, then fallback to system PATH
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString localPath = appDir + "/toolsmac/deno";
+    if (QFile::exists(localPath)) {
+        return localPath;
+    }
+    // Fallback to system PATH
+    return "deno";
+#else
+    // Other platforms: Use system PATH
+    return "deno";
 #endif
 }
 

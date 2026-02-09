@@ -25,10 +25,12 @@ public:
     // Tool status getters
     bool isYtDlpInstalled() const { return m_ytDlpInstalled; }
     bool isFfmpegInstalled() const { return m_ffmpegInstalled; }
+    bool isDenoInstalled() const { return m_denoInstalled; }
     
     // Tool path getters
     QString getYtDlpPath() const;
     QString getFfmpegPath() const;
+    QString getDenoPath() const;
 
 signals:
     void toolsStatusChanged(bool allInstalled);
@@ -41,6 +43,7 @@ private:
     // Detection methods
     void checkYtDlpInstallation();
     void checkFfmpegInstallation();
+    void checkDenoInstallation();
     void updateButtonState();
     
     // Installation methods - macOS
@@ -48,6 +51,7 @@ private:
     void updateYtDlpMac();
     void downloadFfmpegMac();
     void updateFfmpegMac();
+    void downloadDenoMac();
     
     // Installation methods - Windows
     void downloadYtDlpWindows();
@@ -67,6 +71,7 @@ private:
     // Tool status
     bool m_ytDlpInstalled;
     bool m_ffmpegInstalled;
+    bool m_denoInstalled;
     bool m_checkingTools;
     
     // Network manager for downloads
