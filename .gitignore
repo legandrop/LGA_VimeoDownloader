@@ -5,3 +5,5 @@ installer/
 VimeoDownloader_Installer/
 VimeoDownloader_Installer.tar.gz
 deploy-old/
+.codex/
+.cursor/
