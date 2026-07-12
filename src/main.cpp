@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     
     // Configurar información de la aplicación
     app.setApplicationName("VimeoDownloader");
-    app.setApplicationVersion("0.88");
+    app.setApplicationVersion("0.89");
     app.setOrganizationName("LGA");
     app.setOrganizationDomain("lga.com");
     

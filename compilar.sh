@@ -58,6 +58,15 @@ else
     echo "Carpeta toolsmac del proyecto no encontrada o vacía."
 fi
 
+# Refrescar el cache de iconos del bundle: tras cambiar el .icns, el Dock/Finder pueden
+# seguir mostrando el icono viejo por cache (iconservices). touch + lsregister -f fuerzan
+# a re-leer el icono. Si el cache de Tahoe sigue pegajoso, cerrar sesion y volver a entrar.
+LSREG="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+if [ -d "build/VimeoDownloader.app" ]; then
+    touch "build/VimeoDownloader.app"
+    [ -x "$LSREG" ] && "$LSREG" -f "build/VimeoDownloader.app" >/dev/null 2>&1 || true
+fi
+
 echo ""
 echo "Compilación completada. Ejecutando VimeoDownloader..."
 echo ""
