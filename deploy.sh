@@ -8,8 +8,13 @@ fi
 
 echo "Implementando VimeoDownloader..."
 
-# Matar procesos previos si están en ejecución
-pkill -f VimeoDownloader || echo "No se encontró el proceso VimeoDownloader en ejecución."
+# Matar procesos previos si están en ejecución.
+# IMPORTANTE: no usar `pkill -f VimeoDownloader` (patrón demasiado genérico:
+# matchea procesos de extensiones de VSCode con `--folder-uri` al
+# workspace `LGA_VimeoDownloader` y provoca que VSCode los relance varias
+# veces al arrancar el script). Apuntar al path completo del ejecutable
+# dentro del .app.
+pkill -f "VimeoDownloader.app/Contents/MacOS/VimeoDownloader" 2>/dev/null && echo "   - VimeoDownloader terminado" || echo "   - VimeoDownloader no estaba en ejecución"
 sleep 1
 
 # Verificar que Qt de Homebrew está instalado (compatible con macOS Tahoe)

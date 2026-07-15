@@ -2,8 +2,13 @@
 
 echo "Limpiando VimeoDownloader..."
 
-# Matar el proceso VimeoDownloader si está en ejecución
-pkill -f VimeoDownloader || echo "No se encontró el proceso VimeoDownloader en ejecución."
+# Matar SOLO el ejecutable del bundle de este proyecto.
+# IMPORTANTE: no usar `pkill -f VimeoDownloader` (patrón demasiado genérico:
+# matchea procesos de extensiones de VSCode con `--folder-uri` al
+# workspace `LGA_VimeoDownloader` y provoca que VSCode los relance varias
+# veces al arrancar el script). Apuntar al path completo del ejecutable
+# dentro del .app.
+pkill -f "VimeoDownloader.app/Contents/MacOS/VimeoDownloader" 2>/dev/null && echo "   - VimeoDownloader terminado" || echo "   - VimeoDownloader no estaba en ejecución"
 sleep 1
 
 # Eliminar directorios de compilación
