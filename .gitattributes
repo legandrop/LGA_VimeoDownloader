@@ -1,0 +1,47 @@
+# Politica de line endings del repo.
+#
+# Regla general: LF para todo el codigo fuente y la documentacion.
+# Excepcion: los scripts nativos de Windows (.bat/.cmd/.ps1) necesitan CRLF
+# o cmd.exe los interpreta mal.
+#
+# En .gitattributes gana el ULTIMO patron que matchea, asi que el default va
+# primero y las excepciones despues.
+
+# --- Default: normalizar a LF ---
+* text=auto eol=lf
+
+# --- Scripts nativos de Windows: CRLF obligatorio ---
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# --- Scripts Unix/macOS: LF obligatorio ---
+*.sh  text eol=lf
+
+# --- Fuentes y config: LF explicito ---
+*.cpp  text eol=lf
+*.h    text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.qrc  text eol=lf
+*.qss  text eol=lf
+*.in   text eol=lf
+*.iss  text eol=lf
+
+# --- Binarios: sin conversion ni diff de texto ---
+*.png  binary
+*.ico  binary
+*.icns binary
+*.psd  binary
+*.exe  binary
+*.dll  binary
+
+# --- Herramientas de terceros: NO normalizar ---
+# ffmpeg, yt-dlp y deno se distribuyen con la app. Los de `toolsmac/` NO tienen
+# extension (`deno`, `ffmpeg`, `yt-dlp`), asi que ninguna regla por extension
+# los cubre: hay que excluir el arbol entero o Git podria intentar tratarlos
+# como texto y corromper los ejecutables.
+tools/**    -text
+toolsmac/** -text
