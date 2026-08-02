@@ -55,6 +55,7 @@ Antes de cualquier barrido de nombres, separar los dos.
 
 - **NUNCA hacer commits automaticamente.** Commitear solo cuando el usuario lo pide explicitamente o cuando es parte de un plan que ya aprobo.
 - Todo commit o push se hace con la identidad de Git del usuario `legandrop`. Sin coautores, autores alternativos ni footers de atribucion.
+- **La cuenta correcta es `legandrop`, ID de GitHub `176236735`**, o sea el email `176236735+legandrop@users.noreply.github.com`. **Verificar `git config user.email` ANTES de commitear**: si no es ese, corregirlo y avisar antes de seguir. Ya pasó dos veces que quedaran commits con `89184004+legandrop@...`, una cuenta vieja: el nombre se ve igual, pero GitHub atribuye por email, así que esos commits quedan fuera del gráfico de contribuciones de la cuenta buena. Los que ya están en la historia **no se reescriben**.
 - **No mencionar herramientas, agentes, modelos de IA ni asistentes** en commits, changelog, README, documentacion, PRs, issues, releases ni comentarios de codigo. El texto describe el cambio del PROYECTO en sus propios terminos, no el entorno de quien lo hizo.
 
 ## Line endings
