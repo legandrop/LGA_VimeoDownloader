@@ -159,15 +159,33 @@ if(APPLE)
         MACOSX_BUNDLE_INFO_STRING "VideoDownloader ${PROJECT_VERSION}, Compatible con macOS 10.15+"
     )
     
-    # Si existe un icono para macOS, configurarlo
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.icns")
+    # Icono de macOS: pipeline Icon Composer. El icono se disena en
+    # resources/icons/Alta/<Nombre>.icon y se compila con actool. Instrucciones
+    # completas: seccion "5.2 Icon Composer" de ../LGA_IconLab/docs/Doc_Iconos_App.md
+    #
+    # Van DOS recursos al bundle y hacen falta los dos:
+    #   Assets.car    el icono moderno completo, que es lo que consume macOS 26 via
+    #                 CFBundleIconName. Sin esto no hay tratamiento moderno.
+    #   AppIcon.icns  fallback de compatibilidad, via CFBundleIconFile. Se genera con
+    #                 --standalone-icon-behavior all para que traiga TODOS los tamanos
+    #                 (16..1024); por defecto actool solo mete un subconjunto chico que
+    #                 llega hasta 256 px.
+    # NO convertir el .icon a un .icns suelto descartando el Assets.car: eso pierde el
+    # comportamiento moderno y reaparece el problema de tamano en Cmd+Tab.
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/AppIcon.icns")
         set_target_properties(${PROJECT_NAME} PROPERTIES
-            MACOSX_BUNDLE_ICON_FILE "LGA_VideoDownloader.icns"
+            MACOSX_BUNDLE_ICON_FILE "AppIcon.icns"
         )
-        # Copiar el icono al bundle
-        set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.icns"
+        set(VD_MACOS_ICON_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/AppIcon.icns")
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/Assets.car")
+            list(APPEND VD_MACOS_ICON_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/Assets.car")
+        else()
+            message(WARNING "Falta resources/icons/Assets.car: el icono va a caer al .icns "
+                            "de compatibilidad y se pierde el icono moderno.")
+        endif()
+        set_source_files_properties(${VD_MACOS_ICON_FILES}
             PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.icns")
+        target_sources(${PROJECT_NAME} PRIVATE ${VD_MACOS_ICON_FILES})
     endif()
 endif()
 

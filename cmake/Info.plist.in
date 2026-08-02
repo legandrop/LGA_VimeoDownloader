@@ -4,8 +4,15 @@
 <dict>
     <key>CFBundleExecutable</key>
     <string>VideoDownloader</string>
+    <!-- Icono de la aplicacion.
+         CFBundleIconName apunta al icono moderno dentro de Assets.car (Icon Composer);
+         es la clave que usa macOS 26. CFBundleIconFile es el fallback al .icns suelto.
+         Van las dos: sin la primera se pierde el tratamiento moderno, y sin la segunda
+         las herramientas que no leen el CAR se quedan sin icono. -->
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>CFBundleIconFile</key>
-    <string>LGA_VideoDownloader</string>
+    <string>AppIcon.icns</string>
     <key>CFBundleIdentifier</key>
     <string>com.lga.videodownloader</string>
     <key>CFBundleName</key>

@@ -1,5 +1,30 @@
 #!/bin/bash
 
+show_help() {
+    echo "Uso: $0 [--no-run] [--wait]"
+    echo ""
+    echo "Opciones:"
+    echo "  --no-run   Compilar sin lanzar la app"
+    echo "  --wait     Dejar la app en foreground: la terminal queda retenida hasta"
+    echo "             cerrarla y se ven su stdout/stderr y su exit code."
+    echo "             Por defecto la app se lanza en background y el script termina."
+}
+
+NO_RUN=false
+# CONVENCION LGA — por defecto la app se lanza en BACKGROUND y el script termina enseguida.
+# Dejarla en foreground retiene la terminal hasta que alguien cierre la app a mano, lo que
+# cuelga al que compila (y a cualquier agente) por tiempo indefinido.
+# Con --wait se recupera el foreground, util para ver un crash o un exit code.
+WAIT_FOR_APP=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --no-run) NO_RUN=true; shift ;;
+        --wait) WAIT_FOR_APP=true; shift ;;
+        --help) show_help; exit 0 ;;
+        *) echo "Opcion desconocida: $1"; show_help; exit 1 ;;
+    esac
+done
+
 echo "Compilando VideoDownloader..."
 
 # Matar SOLO el ejecutable del bundle de este proyecto.
@@ -76,6 +101,20 @@ echo ""
 echo "Compilación completada. Ejecutando VideoDownloader..."
 echo ""
 
-# Ejecutar la aplicación desde el bundle
+if [ "$NO_RUN" = "true" ]; then
+    echo "Ejecucion omitida (--no-run)"
+    exit 0
+fi
+
+# Ejecutar la aplicación desde el bundle.
+# CONVENCION LGA — por defecto en BACKGROUND (ver comentario de WAIT_FOR_APP arriba).
 export QT_QPA_PLATFORM_PLUGIN_PATH="/opt/homebrew/share/qt/plugins/platforms"
-./build/VideoDownloader.app/Contents/MacOS/VideoDownloader
+APP_BIN="./build/VideoDownloader.app/Contents/MacOS/VideoDownloader"
+if [ "$WAIT_FOR_APP" = "true" ]; then
+    "$APP_BIN"
+else
+    "$APP_BIN" >/dev/null 2>&1 &
+    disown
+    echo "   PID $! (background)."
+    echo "   Usa --wait si necesitas ver su salida o su exit code en la terminal."
+fi

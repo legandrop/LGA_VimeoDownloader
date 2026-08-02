@@ -19,6 +19,22 @@ Descarga videos de **Vimeo y YouTube** con `yt-dlp`, con cola de descargas y cre
 
 Antes de cualquier barrido de nombres, separar los dos.
 
+## Iconos de macOS
+
+**El icono se disena en Icon Composer, NO se genera.** El usuario exporta un `.icon` a `resources/icons/Alta/<Nombre>.icon` (es un directorio: `icon.json` + `Assets/`), y de ahi se compila con `actool`.
+
+**📄 Instrucciones completas y actualizadas: seccion "5.2 Icon Composer" de `../LGA_IconLab/docs/Doc_Iconos_App.md`.** Ahi estan los comandos exactos, la tabla de tamanos medida, el cableado de CMake y como verificar. El flujo completo (cuando corresponde placeholder, quien aprueba, como se aplica) esta en las reglas de `../LGA_IconLab` — secciones "Flujo vigente", "Protocolo para probar un `.icon`" y "Aplicar un `.icon` aprobado a la app".
+
+Lo que mas cuesta si no se lee:
+
+- **Siempre `--standalone-icon-behavior all`**: sin ese flag el `.icns` auxiliar trae 4 representaciones y llega hasta 256 px; con el son 10 y llega a 1024.
+- **Copiar el `.icon` a `AppIcon.icon` antes de compilar**: `actool` nombra el asset segun el archivo, y de ahi sale el valor de `CFBundleIconName`.
+- **Van DOS recursos al bundle**: `Assets.car` (el icono real, via `CFBundleIconName`) y `AppIcon.icns` (fallback, via `CFBundleIconFile`). **NO** descartar el `Assets.car` quedandose solo con el `.icns`: eso pierde el comportamiento moderno y reaparece el problema de tamano en Cmd+Tab.
+- **Verificar la fecha del `.icon`** antes de compilarlo: se re-exportan con el mismo nombre y es facil probar el viejo.
+- **Un build incremental NO borra** los recursos que el `CMakeLists` dejo de copiar: al cambiar de icono, revisar que no quede el `.icns` viejo adentro del bundle.
+- **El cache muerde**: el bundle id de una app real es fijo, asi que puede seguir mostrando el icono viejo. `touch <App>.app` + `lsregister -f`.
+- **Windows es independiente** y no se toca: su `.ico` sale del pipeline generativo de `../LGA_IconLab` (glyph sin fondo).
+
 ## Build
 
 - **Compilar es algo a evaluar en cada cambio**, no automatico. Compilar cuando el usuario lo pide, cuando el cambio toca C++ de forma no trivial, cuando se agregan o quitan archivos del build, o cuando no alcanza con leer el codigo para saber si funciona.
