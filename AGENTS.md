@@ -1,0 +1,69 @@
+# Instrucciones para LGA VimeoDownloader
+
+- Todas las reglas de este repo (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`) deben estar escritas en castellano.
+- Este archivo es uno de **tres espejos** del mismo contenido:
+  - `CLAUDE.md` (Claude Code)
+  - `AGENTS.md` (Codex)
+  - `.cursor/rules/instructions.mdc` (Cursor)
+- Al modificar cualquiera de los tres, sincronizar los otros dos en la misma pasada. El unico contenido que puede diferir es el frontmatter YAML del `.mdc` (`alwaysApply: true`).
+
+## Que es esta app
+
+Descarga videos de **Vimeo y YouTube** con `yt-dlp`, con cola de descargas y credenciales guardadas. Qt/C++ multiplataforma.
+
+**Importante:** "Vimeo" aparece en el repo en DOS roles distintos y no son intercambiables:
+
+- **El servicio**: `vimeo.com` en la logica de formato (`src/core/downloadqueue.cpp`), `isVimeoUrl()`, el placeholder de credenciales. Eso es funcional y NO se renombra.
+- **El nombre del producto**: se renombra cuando corresponda.
+
+Antes de cualquier barrido de nombres, separar los dos.
+
+## Build
+
+- **Compilar es algo a evaluar en cada cambio**, no automatico. Compilar cuando el usuario lo pide, cuando el cambio toca C++ de forma no trivial, cuando se agregan o quitan archivos del build, o cuando no alcanza con leer el codigo para saber si funciona.
+- No compilar para cambios que no pueden romper el build: documentacion, changelog, comentarios, reglas del repo.
+- Al compilar, usar SIEMPRE el script del repo — NUNCA `cmake`, `ninja` o `make` a mano:
+  - Windows: `./compilar.bat`
+  - macOS: `./compilar.sh`
+- No hacer builds limpios automaticamente. No borrar `build/` salvo pedido explicito.
+- Si la compilacion falla, corregir el problema SIN limpiar primero.
+
+## Herramientas de terceros
+
+- `tools/` (Windows) y `toolsmac/` (macOS) contienen **ffmpeg, yt-dlp y deno**, que se distribuyen con la app.
+- **No editarlos, no renombrarlos, no renormalizarlos.** Estan marcados `-text` en `.gitattributes`.
+- Los de `toolsmac/` **no tienen extension** (`deno`, `ffmpeg`, `yt-dlp`), asi que ninguna regla por extension los protege: la exclusion es por directorio.
+- Los binarios de `yt-dlp` contienen la palabra `vimeo` en sus extractores internos. Es normal y no se toca.
+
+## Versionado y changelog
+
+- `CMakeLists.txt` es la **unica fuente de verdad** del numero de version, via `project(VimeoDownloader VERSION x.y ...)`.
+- Changelog principal: `docs/ChangeLog.md`.
+- El numero al comienzo del changelog es la version mas alta registrada. Si el changelog ya esta por encima de `CMakeLists.txt`, **no subir version**: agregar la entrada nueva arriba de las existentes dentro de esa version.
+- La entrada nueva va inmediatamente debajo del numero de version, con una linea en blanco debajo.
+- Siempre en castellano.
+- Al final de cada entrada, entre `[ ]`, una sugerencia de nombre corto para el commit. Ejemplo: `[ Iconos - Adoptar el diseno v003 ]`
+- **Nunca reescribir ni modificar una entrada existente.** Si el cambio evoluciona o se corrige, agregar otra entrada nueva arriba con su propio nombre entre `[ ]`.
+- Longitud (regla blanda): ~100-150 palabras. Ir al grano: que se rompio + que causa + que se cambio.
+
+## Commits
+
+- **NUNCA hacer commits automaticamente.** Commitear solo cuando el usuario lo pide explicitamente o cuando es parte de un plan que ya aprobo.
+- Todo commit o push se hace con la identidad de Git del usuario `legandrop`. Sin coautores, autores alternativos ni footers de atribucion.
+- **No mencionar herramientas, agentes, modelos de IA ni asistentes** en commits, changelog, README, documentacion, PRs, issues, releases ni comentarios de codigo. El texto describe el cambio del PROYECTO en sus propios terminos, no el entorno de quien lo hizo.
+
+## Line endings
+
+- El repo esta normalizado a **LF**, con **CRLF solo en `.bat`, `.cmd` y `.ps1`** (los necesitan para que `cmd.exe` los interprete bien). La politica vive en `.gitattributes` y `.editorconfig`; no hay que decidir nada por archivo.
+- `tools/` y `toolsmac/` estan marcados `-text`: son binarios de terceros y NO se renormalizan.
+- Al editar, **cambiar solo las lineas necesarias**. No reescribir un archivo entero ni normalizar line endings como efecto colateral de un cambio no relacionado.
+- Si un archivo aparece modificado ENTERO en el diff, parar y averiguar si hubo conversion de line endings antes de seguir. `git diff --ignore-cr-at-eol` muestra el cambio real de contenido.
+- No mezclar renormalizacion con cambios funcionales: va en su propio commit, y se agrega al `.git-blame-ignore-revs`.
+
+## Politica de idioma
+
+Convencion LGA cross-app:
+
+- **Texto visible en UI** (labels, botones, titulos de ventana, mensajes al usuario): siempre en **INGLES**.
+- **Comentarios de codigo y mensajes de log de debug**: siempre en **CASTELLANO**.
+- **Strings de error internas** que no se muestran al usuario final: pueden estar en castellano.

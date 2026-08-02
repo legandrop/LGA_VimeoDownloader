@@ -6,4 +6,9 @@ VimeoDownloader_Installer/
 VimeoDownloader_Installer.tar.gz
 deploy-old/
 .codex/
-.cursor/
+# Se ignora el CONTENIDO de .cursor/, no el directorio: Git no puede
+# re-incluir un archivo si su directorio padre esta excluido.
+.cursor/*
+# Las reglas del repo SI se versionan: son uno de los tres espejos
+# (CLAUDE.md / AGENTS.md / .cursor/rules/instructions.mdc).
+!.cursor/rules/
