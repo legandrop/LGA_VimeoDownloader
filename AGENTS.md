@@ -5,7 +5,8 @@
   - `CLAUDE.md` (Claude Code)
   - `AGENTS.md` (Codex)
   - `.cursor/rules/instructions.mdc` (Cursor)
-- Al modificar cualquiera de los tres, sincronizar los otros dos en la misma pasada. El unico contenido que puede diferir es el frontmatter YAML del `.mdc` (`alwaysApply: true`).
+- Al modificar cualquiera de los tres, **correr `./sync_rules.sh`** (Windows: `sync_rules.bat`) y listo: copia el contenido a los otros dos y le pone el frontmatter al `.mdc`. Es lo unico que puede diferir entre ellos (`alwaysApply: true`).
+- 🔴 **HOOK: corriendo en mac, FALTA EN WINDOWS.** Hay un `pre-commit` que corta el commit si los tres espejos no coinciden. Se activa una sola vez por maquina con `sync_rules.bat --install-hook` (mac: `./sync_rules.sh --install-hook`), porque `core.hooksPath` es config local y no viaja en el clon. **Cuando se active en Windows, cambiar esta linea por: "HOOK: corriendo en mac y windows".** Si alguna vez se formatea una maquina o se re-clona el repo, hay que volver a activarlo ahi y actualizar esta linea.
 
 ## Que es esta app
 
