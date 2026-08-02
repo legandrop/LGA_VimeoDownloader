@@ -1,4 +1,4 @@
-#include "vimeodownloader/videopassworddialog.h"
+#include "videodownloader/videopassworddialog.h"
 #include <QApplication>
 #include <QUrl>
 

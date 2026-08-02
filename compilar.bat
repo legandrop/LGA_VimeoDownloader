@@ -1,13 +1,13 @@
 @echo off
-echo Compilando VimeoDownloader...
+echo Compilando VideoDownloader...
 
-REM Matar el proceso VimeoDownloader si está en ejecución
-taskkill /F /IM VimeoDownloader.exe 2>nul
+REM Matar el proceso VideoDownloader si está en ejecución
+taskkill /F /IM VideoDownloader.exe 2>nul
 if %ERRORLEVEL% EQU 0 (
-    echo Proceso VimeoDownloader terminado.
+    echo Proceso VideoDownloader terminado.
     timeout /t 1 >nul
 ) else (
-    echo No se encontró el proceso VimeoDownloader en ejecución.
+    echo No se encontró el proceso VideoDownloader en ejecución.
 )
 
 REM Añadir Qt y MinGW al PATH
@@ -22,7 +22,7 @@ echo Configurando con CMake...
 cmake .. -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH="C:/Qt/6.8.2/mingw_64"
 
 REM Compilar el proyecto
-echo Compilando VimeoDownloader...
+echo Compilando VideoDownloader...
 cmake --build .
 
 REM Verificar si la compilación fue exitosa
@@ -47,8 +47,8 @@ if exist ..\tools\*.* (
 REM Ejecutar la aplicación
 echo.
 echo Compilación completada exitosamente.
-echo Ejecutando VimeoDownloader...
+echo Ejecutando VideoDownloader...
 echo.
-start VimeoDownloader.exe
+start VideoDownloader.exe
 
 cd ..

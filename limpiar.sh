@@ -1,14 +1,14 @@
 #!/bin/bash
 
-echo "Limpiando VimeoDownloader..."
+echo "Limpiando VideoDownloader..."
 
 # Matar SOLO el ejecutable del bundle de este proyecto.
-# IMPORTANTE: no usar `pkill -f VimeoDownloader` (patrón demasiado genérico:
+# IMPORTANTE: no usar `pkill -f VideoDownloader` (patrón demasiado genérico:
 # matchea procesos de extensiones de VSCode con `--folder-uri` al
-# workspace `LGA_VimeoDownloader` y provoca que VSCode los relance varias
+# workspace `LGA_VideoDownloader` y provoca que VSCode los relance varias
 # veces al arrancar el script). Apuntar al path completo del ejecutable
 # dentro del .app.
-pkill -f "VimeoDownloader.app/Contents/MacOS/VimeoDownloader" 2>/dev/null && echo "   - VimeoDownloader terminado" || echo "   - VimeoDownloader no estaba en ejecución"
+pkill -f "VideoDownloader.app/Contents/MacOS/VideoDownloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
 sleep 1
 
 # Eliminar directorios de compilación

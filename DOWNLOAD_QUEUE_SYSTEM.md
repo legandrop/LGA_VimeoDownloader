@@ -1,6 +1,6 @@
-# Sistema de Cola de Descargas - VimeoDownloader
+# Sistema de Cola de Descargas - VideoDownloader
 
-Este documento explica el funcionamiento completo del sistema de cola de descargas implementado en VimeoDownloader.
+Este documento explica el funcionamiento completo del sistema de cola de descargas implementado en VideoDownloader.
 
 ## 📋 Descripción General
 

@@ -1,4 +1,4 @@
-#include "vimeodownloader/toolsmanager.h"
+#include "videodownloader/toolsmanager.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -613,7 +613,7 @@ void ToolsManager::downloadYtDlpMac()
     QNetworkRequest request(url);
     
     // Set user agent
-    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    request.setRawHeader("User-Agent", "VideoDownloader/1.0");
     
     logMessage(QString("Downloading yt-dlp from: %1").arg(url));
     
@@ -699,7 +699,7 @@ void ToolsManager::downloadFfmpegMac()
     QNetworkRequest request(url);
     
     // Set user agent
-    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    request.setRawHeader("User-Agent", "VideoDownloader/1.0");
     
     logMessage(QString("Downloading ffmpeg from: %1").arg(url));
     
@@ -814,7 +814,7 @@ void ToolsManager::downloadDenoMac()
     QNetworkRequest request(url);
     
     // Set user agent
-    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    request.setRawHeader("User-Agent", "VideoDownloader/1.0");
     
     logMessage(QString("Downloading deno from: %1").arg(url));
     
@@ -935,7 +935,7 @@ void ToolsManager::downloadYtDlpWindows()
     QNetworkRequest request(url);
     
     // Set user agent
-    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    request.setRawHeader("User-Agent", "VideoDownloader/1.0");
     
     logMessage(QString("Downloading yt-dlp from: %1").arg(url));
     
@@ -1013,7 +1013,7 @@ void ToolsManager::downloadFfmpegWindows()
     QNetworkRequest request(url);
     
     // Set user agent
-    request.setRawHeader("User-Agent", "VimeoDownloader/1.0");
+    request.setRawHeader("User-Agent", "VideoDownloader/1.0");
     
     logMessage(QString("Downloading ffmpeg from: %1").arg(url));
     logMessage("Note: This will download a zip file that needs to be extracted manually");

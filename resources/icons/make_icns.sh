@@ -1,15 +1,15 @@
 #!/bin/bash
-# Genera LGA_VimeoDownloader.icns con fondo oscuro redondeado (#1b1b1d)
+# Genera LGA_VideoDownloader.icns con fondo oscuro redondeado (#1b1b1d)
 # compositeando el PNG original sobre el background.
 # Uso: bash make_icns.sh (desde la carpeta resources/icons/)
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SRC_PNG="$SCRIPT_DIR/Alta/LGA_VimeoDownloader.png"
-SVG_TMP="/tmp/VimeoDownloader_composed.svg"
-PNG_TMP="/tmp/VimeoDownloader_1024.png"
-ICONSET="/tmp/VimeoDownloader.iconset"
-ICNS="$SCRIPT_DIR/LGA_VimeoDownloader.icns"
+SRC_PNG="$SCRIPT_DIR/Alta/LGA_VideoDownloader.png"
+SVG_TMP="/tmp/VideoDownloader_composed.svg"
+PNG_TMP="/tmp/VideoDownloader_1024.png"
+ICONSET="/tmp/VideoDownloader.iconset"
+ICNS="$SCRIPT_DIR/LGA_VideoDownloader.icns"
 
 echo "→ Componiendo SVG con fondo oscuro..."
 python3 - "$SRC_PNG" "$SVG_TMP" <<'PYEOF'
@@ -37,7 +37,7 @@ PYEOF
 
 echo "→ Renderizando SVG a PNG 1024x1024..."
 qlmanage -t -s 1024 -o /tmp/ "$SVG_TMP" > /dev/null 2>&1
-mv /tmp/VimeoDownloader_composed.svg.png "$PNG_TMP"
+mv /tmp/VideoDownloader_composed.svg.png "$PNG_TMP"
 
 echo "→ Creando iconset..."
 rm -rf "$ICONSET"

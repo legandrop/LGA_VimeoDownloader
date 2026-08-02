@@ -6,15 +6,15 @@ if [ -d "deploy" ]; then
     rm -rf deploy
 fi
 
-echo "Implementando VimeoDownloader..."
+echo "Implementando VideoDownloader..."
 
 # Matar procesos previos si están en ejecución.
-# IMPORTANTE: no usar `pkill -f VimeoDownloader` (patrón demasiado genérico:
+# IMPORTANTE: no usar `pkill -f VideoDownloader` (patrón demasiado genérico:
 # matchea procesos de extensiones de VSCode con `--folder-uri` al
-# workspace `LGA_VimeoDownloader` y provoca que VSCode los relance varias
+# workspace `LGA_VideoDownloader` y provoca que VSCode los relance varias
 # veces al arrancar el script). Apuntar al path completo del ejecutable
 # dentro del .app.
-pkill -f "VimeoDownloader.app/Contents/MacOS/VimeoDownloader" 2>/dev/null && echo "   - VimeoDownloader terminado" || echo "   - VimeoDownloader no estaba en ejecución"
+pkill -f "VideoDownloader.app/Contents/MacOS/VideoDownloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
 sleep 1
 
 # Verificar que Qt de Homebrew está instalado (compatible con macOS Tahoe)
@@ -56,31 +56,31 @@ cmake --build . --config Release
 cd ..
 
 # Crear estructura del bundle
-mkdir -p deploy/VimeoDownloader.app/Contents/{MacOS,Resources,Frameworks}
-cp build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader deploy/VimeoDownloader.app/Contents/MacOS/
+mkdir -p deploy/VideoDownloader.app/Contents/{MacOS,Resources,Frameworks}
+cp build/VideoDownloader.app/Contents/MacOS/VideoDownloader deploy/VideoDownloader.app/Contents/MacOS/
 
 # Copiar el ícono al bundle si existe
-if [ -f "resources/icons/LGA_VimeoDownloader.icns" ]; then
+if [ -f "resources/icons/LGA_VideoDownloader.icns" ]; then
     echo "Copiando ícono al bundle..."
-    cp resources/icons/LGA_VimeoDownloader.icns deploy/VimeoDownloader.app/Contents/Resources/
+    cp resources/icons/LGA_VideoDownloader.icns deploy/VideoDownloader.app/Contents/Resources/
 fi
 
 # Crear Info.plist con configuración mejorada de compatibilidad
-cat > deploy/VimeoDownloader.app/Contents/Info.plist << EOL
+cat > deploy/VideoDownloader.app/Contents/Info.plist << EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>VimeoDownloader</string>
+    <string>VideoDownloader</string>
     <key>CFBundleIconFile</key>
-    <string>LGA_VimeoDownloader</string>
+    <string>LGA_VideoDownloader</string>
     <key>CFBundleIdentifier</key>
-    <string>com.lga.vimeodownloader</string>
+    <string>com.lga.videodownloader</string>
     <key>CFBundleName</key>
-    <string>VimeoDownloader</string>
+    <string>VideoDownloader</string>
     <key>CFBundleDisplayName</key>
-    <string>Vimeo Downloader</string>
+    <string>Video Downloader</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
@@ -119,7 +119,7 @@ EOL
 
 # Nota: macdeployqt tiene problemas con Homebrew Qt en macOS Tahoe
 # La aplicación funcionará sin él si Qt está disponible en el sistema destino
-# "$QT_PATH/bin/macdeployqt" deploy/VimeoDownloader.app
+# "$QT_PATH/bin/macdeployqt" deploy/VideoDownloader.app
 echo "Omitiendo macdeployqt (problemas conocidos con Homebrew Qt en macOS Tahoe)"
 
 # Crear carpeta toolsmac en deploy y copiar herramientas
@@ -127,20 +127,20 @@ echo ""
 echo "Preparando carpeta toolsmac para deploy..."
 if [ -d "toolsmac" ]; then
     echo "Copiando herramientas a carpeta deploy..."
-    cp -r toolsmac deploy/VimeoDownloader.app/Contents/MacOS/
+    cp -r toolsmac deploy/VideoDownloader.app/Contents/MacOS/
     echo "Herramientas copiadas exitosamente."
 else
     echo "Carpeta toolsmac no encontrada o vacía."
 fi
 
 # Hacer ejecutable el script
-chmod +x deploy/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
+chmod +x deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader
 
 echo
-echo "Implementación completada. La aplicación portable está en la carpeta 'deploy/VimeoDownloader.app'."
+echo "Implementación completada. La aplicación portable está en la carpeta 'deploy/VideoDownloader.app'."
 echo
 
 # Ejecutar la aplicación implementada
-echo "Ejecutando VimeoDownloader..."
+echo "Ejecutando VideoDownloader..."
 export QT_QPA_PLATFORM_PLUGIN_PATH="/opt/homebrew/share/qt/plugins/platforms"
-./deploy/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
+./deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader

@@ -1,14 +1,14 @@
 #!/bin/bash
 
-echo "Compilando VimeoDownloader..."
+echo "Compilando VideoDownloader..."
 
 # Matar SOLO el ejecutable del bundle de este proyecto.
-# IMPORTANTE: no usar `pkill -f VimeoDownloader` (patrón demasiado genérico:
+# IMPORTANTE: no usar `pkill -f VideoDownloader` (patrón demasiado genérico:
 # matchea procesos de extensiones de VSCode con `--folder-uri` al
-# workspace `LGA_VimeoDownloader` y provoca que VSCode los relance varias
+# workspace `LGA_VideoDownloader` y provoca que VSCode los relance varias
 # veces al arrancar el script). Apuntar al path completo del ejecutable
 # dentro del .app.
-pkill -f "VimeoDownloader.app/Contents/MacOS/VimeoDownloader" 2>/dev/null && echo "   - VimeoDownloader terminado" || echo "   - VimeoDownloader no estaba en ejecución"
+pkill -f "VideoDownloader.app/Contents/MacOS/VideoDownloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
 sleep 1
 
 # Crear directorio de compilación si no existe
@@ -46,7 +46,7 @@ if [ -d "$QT_PATH" ]; then
     export PATH="$QT_PATH/bin:$PATH"
     export DYLD_LIBRARY_PATH="$QT_PATH/lib:$DYLD_LIBRARY_PATH"
     # Nota: macdeployqt tiene problemas con Homebrew Qt, pero la app funciona sin él
-    # "$QT_PATH/bin/macdeployqt" build/VimeoDownloader.app -libpath="$QT_PATH/lib"
+    # "$QT_PATH/bin/macdeployqt" build/VideoDownloader.app -libpath="$QT_PATH/lib"
     echo "Dependencias de Qt disponibles en el sistema (Homebrew)."
 else
     echo "Advertencia: Qt no encontrado en $QT_PATH. La aplicación puede no ejecutarse correctamente."
@@ -57,7 +57,7 @@ echo ""
 echo "Preparando carpeta toolsmac..."
 if [ -d "toolsmac" ]; then
     echo "Copiando herramientas desde carpeta toolsmac del proyecto..."
-    cp -r toolsmac build/VimeoDownloader.app/Contents/MacOS/
+    cp -r toolsmac build/VideoDownloader.app/Contents/MacOS/
     echo "Herramientas copiadas exitosamente."
 else
     echo "Carpeta toolsmac del proyecto no encontrada o vacía."
@@ -67,15 +67,15 @@ fi
 # seguir mostrando el icono viejo por cache (iconservices). touch + lsregister -f fuerzan
 # a re-leer el icono. Si el cache de Tahoe sigue pegajoso, cerrar sesion y volver a entrar.
 LSREG="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
-if [ -d "build/VimeoDownloader.app" ]; then
-    touch "build/VimeoDownloader.app"
-    [ -x "$LSREG" ] && "$LSREG" -f "build/VimeoDownloader.app" >/dev/null 2>&1 || true
+if [ -d "build/VideoDownloader.app" ]; then
+    touch "build/VideoDownloader.app"
+    [ -x "$LSREG" ] && "$LSREG" -f "build/VideoDownloader.app" >/dev/null 2>&1 || true
 fi
 
 echo ""
-echo "Compilación completada. Ejecutando VimeoDownloader..."
+echo "Compilación completada. Ejecutando VideoDownloader..."
 echo ""
 
 # Ejecutar la aplicación desde el bundle
 export QT_QPA_PLATFORM_PLUGIN_PATH="/opt/homebrew/share/qt/plugins/platforms"
-./build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
+./build/VideoDownloader.app/Contents/MacOS/VideoDownloader

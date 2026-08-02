@@ -1,5 +1,5 @@
-#include "vimeodownloader/mainwindow.h"
-#include "vimeodownloader/colorutils.h"
+#include "videodownloader/mainwindow.h"
+#include "videodownloader/colorutils.h"
 
 #include <QApplication>
 #include <QFile>
@@ -8,17 +8,111 @@
 #include <QIcon>
 #include <QFontDatabase>
 #include <QDir>
+#include <QFileInfo>
+#include <QStandardPaths>
+
+namespace {
+
+// Devuelve <AppData>/LGA/<appFolder>, con la MISMA logica de plataforma que
+// MainWindow::getConfigPath(). No crea el directorio.
+QString appDataDirFor(const QString &appFolder)
+{
+#ifdef Q_OS_WIN
+    QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    base = base.replace("/VideoDownloader", "").replace("\\VideoDownloader", "");
+    return base + "/" + appFolder;
+#elif defined(Q_OS_MAC)
+    QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    base = base.replace("/VideoDownloader", "");
+    return base + "/" + appFolder;
+#else
+    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+           + "/LGA/" + appFolder;
+#endif
+}
+
+// Migracion one-time del AppData: <AppData>/LGA/VimeoDownloader -> .../VideoDownloader
+//
+// La app se llamaba VimeoDownloader; el rename cambia la carpeta de settings.
+// Sin esto, cada usuario abre la version nueva sin sus credenciales de Vimeo ni
+// su carpeta de descargas configurada.
+//
+// El centinela es el ARCHIVO `config.ini`, NO la existencia del directorio
+// destino: `MainWindow::getConfigPath()` hace `mkpath` cada vez que se llama,
+// asi que el directorio puede aparecer sin que la migracion haya corrido. Con
+// una guarda por directorio, cualquier arranque que abortara la migracion
+// dejaba el destino creado y NO se reintentaba nunca mas, en silencio.
+//
+// Se copia a un staging y recien al final se renombra: si el proceso muere a
+// mitad, el destino no existe y el proximo arranque reintenta.
+//
+// La carpeta vieja NO se borra: son unos KB y queda como rollback gratis.
+void migrateLegacyAppDataDir()
+{
+    const QString currentDir = appDataDirFor(QStringLiteral("VideoDownloader"));
+    const QString legacyDir = appDataDirFor(QStringLiteral("VimeoDownloader"));
+    const QString configName = QStringLiteral("config.ini");
+
+    if (QFileInfo::exists(QDir(currentDir).filePath(configName))) {
+        return; // Ya migrado, o la app ya guardo su propia config.
+    }
+    if (!QFileInfo::exists(QDir(legacyDir).filePath(configName))) {
+        return; // Instalacion nueva: no hay nada que migrar.
+    }
+
+    const QString stagingDir = currentDir + QStringLiteral(".migrating");
+    if (QDir(stagingDir).exists() && !QDir(stagingDir).removeRecursively()) {
+        qWarning() << "Migracion AppData: no se pudo limpiar el staging previo" << stagingDir;
+        return;
+    }
+    if (!QDir().mkpath(stagingDir)) {
+        qWarning() << "Migracion AppData: no se pudo crear" << stagingDir;
+        return;
+    }
+
+    // Solo los archivos del nivel superior; no se esperan subdirectorios.
+    const QFileInfoList entries =
+        QDir(legacyDir).entryInfoList(QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot);
+    for (const QFileInfo &entry : entries) {
+        if (!QFile::copy(entry.absoluteFilePath(), QDir(stagingDir).filePath(entry.fileName()))) {
+            qWarning() << "Migracion AppData: no se pudo copiar" << entry.fileName();
+            QDir(stagingDir).removeRecursively();
+            return;
+        }
+    }
+
+    QDir().mkpath(QFileInfo(currentDir).absolutePath());
+    // `rename` no pisa un destino existente: si quedo una carpeta vacia de un
+    // `mkpath` previo, hay que sacarla antes.
+    if (QDir(currentDir).exists() && !QDir(currentDir).removeRecursively()) {
+        qWarning() << "Migracion AppData: no se pudo limpiar el destino" << currentDir;
+        QDir(stagingDir).removeRecursively();
+        return;
+    }
+    if (!QDir().rename(stagingDir, currentDir)) {
+        qWarning() << "Migracion AppData: no se pudo renombrar el staging a" << currentDir;
+        QDir(stagingDir).removeRecursively();
+        return;
+    }
+    qInfo() << "Migracion AppData completada:" << legacyDir << "->" << currentDir;
+}
+
+} // namespace
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    
+
     // Configurar información de la aplicación
-    app.setApplicationName("VimeoDownloader");
-    app.setApplicationVersion("0.89");
+    app.setApplicationName("VideoDownloader");
+    // Version desde la macro de CMake: fuente unica de verdad en `project()`.
+    app.setApplicationVersion(QStringLiteral(VIDEODOWNLOADER_VERSION));
     app.setOrganizationName("LGA");
     app.setOrganizationDomain("lga.com");
-    
+
+    // Debe correr ANTES de que MainWindow construya su QSettings.
+    migrateLegacyAppDataDir();
+
     // Cargar fuentes Inter si están disponibles
     QDir fontsDir(":/fonts");
     if (fontsDir.exists()) {

@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>VimeoDownloader</string>
+    <string>VideoDownloader</string>
     <key>CFBundleIconFile</key>
-    <string>LGA_VimeoDownloader</string>
+    <string>LGA_VideoDownloader</string>
     <key>CFBundleIdentifier</key>
-    <string>com.lga.vimeodownloader</string>
+    <string>com.lga.videodownloader</string>
     <key>CFBundleName</key>
-    <string>VimeoDownloader</string>
+    <string>VideoDownloader</string>
     <key>CFBundleDisplayName</key>
-    <string>Vimeo Downloader</string>
+    <string>Video Downloader</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>

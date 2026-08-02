@@ -1,6 +1,6 @@
-# 🚀 Guía Completa: VimeoDownloader en macOS (Incluyendo Sequoia 15.1+)
+# 🚀 Guía Completa: VideoDownloader en macOS (Incluyendo Sequoia 15.1+)
 
-Esta guía explica cómo hacer funcionar VimeoDownloader en cualquier Mac, incluyendo versiones recientes como macOS Sequoia 15.1, sin necesidad de certificados pagos de Apple.
+Esta guía explica cómo hacer funcionar VideoDownloader en cualquier Mac, incluyendo versiones recientes como macOS Sequoia 15.1, sin necesidad de certificados pagos de Apple.
 
 ## 📋 Problema que Resolvimos
 
@@ -47,16 +47,16 @@ Los scripts `compilar.sh` y `deploy.sh` ya incluyen las configuraciones correcta
 ```
 
 **¿Qué hace este script?**
-- ✅ Copia la aplicación compilada (`deploy/VimeoDownloader.app`)
+- ✅ Copia la aplicación compilada (`deploy/VideoDownloader.app`)
 - ✅ Crea un script instalador (`EJECUTAR_EN_TERMINAL.sh`)
 - ✅ Genera instrucciones claras (`INSTRUCCIONES_IMPORTANTES.txt`)
-- ✅ Crea archivo comprimido (`VimeoDownloader_Installer.tar.gz`)
+- ✅ Crea archivo comprimido (`VideoDownloader_Installer.tar.gz`)
 
 ### 2.2 Contenido del Instalador
 
 ```
-VimeoDownloader_Installer/
-├── VimeoDownloader.app          # Tu aplicación completa
+VideoDownloader_Installer/
+├── VideoDownloader.app          # Tu aplicación completa
 ├── EJECUTAR_EN_TERMINAL.sh     # Script instalador (con permisos)
 └── INSTRUCCIONES_IMPORTANTES.txt # Guía para el usuario
 ```
@@ -67,7 +67,7 @@ VimeoDownloader_Installer/
 
 ### 3.1 Envío del Instalador
 
-Envía el archivo `VimeoDownloader_Installer.tar.gz` a tu amigo por:
+Envía el archivo `VideoDownloader_Installer.tar.gz` a tu amigo por:
 - 📧 Email
 - 💬 Telegram
 - 📁 Google Drive
@@ -83,9 +83,9 @@ Envía el archivo `VimeoDownloader_Installer.tar.gz` a tu amigo por:
 
 1. **Descomprimir:**
    ```bash
-   # En Finder: Doble clic en VimeoDownloader_Installer.tar.gz
+   # En Finder: Doble clic en VideoDownloader_Installer.tar.gz
    # O en Terminal si hay problemas de permisos:
-   tar -xzpf VimeoDownloader_Installer.tar.gz
+   tar -xzpf VideoDownloader_Installer.tar.gz
    ```
 
 2. **Ejecutar instalador:**
@@ -98,10 +98,10 @@ Envía el archivo `VimeoDownloader_Installer.tar.gz` a tu amigo por:
 
 ```bash
 # Abrir Terminal
-# Arrastrar VimeoDownloader.app a Terminal
+# Arrastrar VideoDownloader.app a Terminal
 # Escribir ANTES de la ruta: xattr -cr
 # Presionar Enter
-# Abrir VimeoDownloader.app
+# Abrir VideoDownloader.app
 ```
 
 ---
@@ -121,21 +121,21 @@ El script `EJECUTAR_EN_TERMINAL.sh` hace automáticamente:
 ```bash
 #!/bin/bash
 
-echo "🚀 Instalando VimeoDownloader..."
+echo "🚀 Instalando VideoDownloader..."
 
 # Obtener directorio del script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Remover atributos de cuarentena
 echo "🧹 Configurando permisos de seguridad..."
-xattr -cr "$DIR/VimeoDownloader.app"
+xattr -cr "$DIR/VideoDownloader.app"
 
 # Configurar permisos
 echo "✅ Configuración completada"
 
 # Abrir aplicación
-echo "📱 Abriendo VimeoDownloader..."
-open "$DIR/VimeoDownloader.app"
+echo "📱 Abriendo VideoDownloader..."
+open "$DIR/VideoDownloader.app"
 ```
 
 ### 4.3 Ventajas de Esta Solución
@@ -165,14 +165,14 @@ open "$DIR/VimeoDownloader.app"
 
 3. **Distribuir:**
    ```bash
-   # Enviar VimeoDownloader_Installer.tar.gz a usuarios
+   # Enviar VideoDownloader_Installer.tar.gz a usuarios
    ```
 
 ### Para Usuarios Finales:
 
 1. **Descomprimir** el archivo recibido
 2. **Ejecutar** `EJECUTAR_EN_TERMINAL.sh` desde Terminal
-3. **¡Disfrutar!** de VimeoDownloader funcionando perfectamente
+3. **¡Disfrutar!** de VideoDownloader funcionando perfectamente
 
 ---
 
@@ -207,14 +207,14 @@ chmod +x EJECUTAR_EN_TERMINAL.sh
 ### Problema: Aplicación sigue sin abrirse
 ```bash
 # Solución manual:
-xattr -cr VimeoDownloader.app
-open VimeoDownloader.app
+xattr -cr VideoDownloader.app
+open VideoDownloader.app
 ```
 
 ### Problema: Permisos perdidos al descomprimir
 ```bash
 # Usar Terminal para descomprimir:
-tar -xzpf VimeoDownloader_Installer.tar.gz
+tar -xzpf VideoDownloader_Installer.tar.gz
 ```
 
 ---
@@ -239,6 +239,6 @@ tar -xzpf VimeoDownloader_Installer.tar.gz
 
 ## 🎉 Conclusión
 
-**VimeoDownloader ahora funciona perfectamente en cualquier Mac**, incluyendo las versiones más recientes como macOS Sequoia 15.1, sin necesidad de certificados pagos o conocimientos técnicos avanzados por parte del usuario.
+**VideoDownloader ahora funciona perfectamente en cualquier Mac**, incluyendo las versiones más recientes como macOS Sequoia 15.1, sin necesidad de certificados pagos o conocimientos técnicos avanzados por parte del usuario.
 
 **La solución es simple, efectiva y mantiene toda la funcionalidad original de la aplicación.**

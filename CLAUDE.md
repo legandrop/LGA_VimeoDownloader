@@ -1,4 +1,4 @@
-# Instrucciones para LGA VimeoDownloader
+# Instrucciones para LGA VideoDownloader
 
 - Todas las reglas de este repo (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules/`) deben estar escritas en castellano.
 - Este archivo es uno de **tres espejos** del mismo contenido:
@@ -37,7 +37,7 @@ Antes de cualquier barrido de nombres, separar los dos.
 
 ## Versionado y changelog
 
-- `CMakeLists.txt` es la **unica fuente de verdad** del numero de version, via `project(VimeoDownloader VERSION x.y ...)`.
+- `CMakeLists.txt` es la **unica fuente de verdad** del numero de version, via `project(VideoDownloader VERSION x.y ...)`.
 - Changelog principal: `docs/ChangeLog.md`.
 - El numero al comienzo del changelog es la version mas alta registrada. Si el changelog ya esta por encima de `CMakeLists.txt`, **no subir version**: agregar la entrada nueva arriba de las existentes dentro de esa version.
 - La entrada nueva va inmediatamente debajo del numero de version, con una linea en blanco debajo.

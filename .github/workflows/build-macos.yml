@@ -59,27 +59,27 @@ jobs:
     - name: Crear bundle con dependencias
       run: |
         cd build
-        macdeployqt VimeoDownloader.app
+        macdeployqt VideoDownloader.app
         
     - name: Copiar herramientas macOS
       run: |
         if [ -d "toolsmac" ]; then
-          cp -r toolsmac build/VimeoDownloader.app/Contents/MacOS/
+          cp -r toolsmac build/VideoDownloader.app/Contents/MacOS/
         fi
         
     - name: Verificar arquitecturas
       run: |
         echo "Verificando arquitecturas del binario:"
-        lipo -info build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
+        lipo -info build/VideoDownloader.app/Contents/MacOS/VideoDownloader
         
     - name: Crear archivo comprimido
       run: |
         cd build
-        tar -czf VimeoDownloader-${{ matrix.os }}.tar.gz VimeoDownloader.app
+        tar -czf VideoDownloader-${{ matrix.os }}.tar.gz VideoDownloader.app
         
     - name: Subir artefactos
       uses: actions/upload-artifact@v4
       with:
-        name: VimeoDownloader-${{ matrix.os }}
-        path: build/VimeoDownloader-${{ matrix.os }}.tar.gz
+        name: VideoDownloader-${{ matrix.os }}
+        path: build/VideoDownloader-${{ matrix.os }}.tar.gz
         retention-days: 30

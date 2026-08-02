@@ -1,5 +1,5 @@
 @echo off
-echo Limpiando VimeoDownloader...
+echo Limpiando VideoDownloader...
 
 REM Eliminar directorio de compilación
 if exist build (

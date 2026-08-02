@@ -1,9 +1,9 @@
 #!/bin/bash
 
-echo "Compilando VimeoDownloader..."
+echo "Compilando VideoDownloader..."
 
-# Matar el proceso VimeoDownloader si está en ejecución
-pkill -f VimeoDownloader || echo "No se encontró el proceso VimeoDownloader en ejecución."
+# Matar el proceso VideoDownloader si está en ejecución
+pkill -f VideoDownloader || echo "No se encontró el proceso VideoDownloader en ejecución."
 sleep 1
 
 # Crear directorio de compilación si no existe
@@ -27,7 +27,7 @@ echo "Copiando dependencias de Qt al bundle..."
 QT_PATH="$HOME/Qt/6.8.2/macos"
 if [ -d "$QT_PATH" ]; then
     export PATH="$QT_PATH/bin:$PATH"
-    "$QT_PATH/bin/macdeployqt" build/VimeoDownloader.app
+    "$QT_PATH/bin/macdeployqt" build/VideoDownloader.app
     echo "Dependencias de Qt copiadas exitosamente."
 else
     echo "Advertencia: Qt no encontrado en $QT_PATH. La aplicación puede no ejecutarse correctamente."
@@ -38,15 +38,15 @@ echo ""
 echo "Preparando carpeta toolsmac..."
 if [ -d "toolsmac" ]; then
     echo "Copiando herramientas desde carpeta toolsmac del proyecto..."
-    cp -r toolsmac build/VimeoDownloader.app/Contents/MacOS/
+    cp -r toolsmac build/VideoDownloader.app/Contents/MacOS/
     echo "Herramientas copiadas exitosamente."
 else
     echo "Carpeta toolsmac del proyecto no encontrada o vacía."
 fi
 
 echo ""
-echo "Compilación completada. Ejecutando VimeoDownloader..."
+echo "Compilación completada. Ejecutando VideoDownloader..."
 echo ""
 
 # Ejecutar la aplicación desde el bundle
-./build/VimeoDownloader.app/Contents/MacOS/VimeoDownloader
+./build/VideoDownloader.app/Contents/MacOS/VideoDownloader

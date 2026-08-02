@@ -2,8 +2,8 @@ build/
 deploy/
 .DS_Store
 installer/
-VimeoDownloader_Installer/
-VimeoDownloader_Installer.tar.gz
+VideoDownloader_Installer/
+VideoDownloader_Installer.tar.gz
 deploy-old/
 .codex/
 # Se ignora el CONTENIDO de .cursor/, no el directorio: Git no puede

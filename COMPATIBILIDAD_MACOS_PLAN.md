@@ -1,7 +1,7 @@
-# Plan de Compatibilidad para VimeoDownloader en macOS
+# Plan de Compatibilidad para VideoDownloader en macOS
 
 ## Objetivo General
-Hacer que la aplicación VimeoDownloader sea compatible con versiones antiguas y nuevas de macOS mediante compilación universal (soporte para arquitecturas x86_64 -Intel- y arm64 -Apple Silicon-) y pruebas en múltiples entornos. Esto se basa en la combinación de la Opción 1 (Compilación Universal) y la Opción 4 (Pruebas) de nuestro análisis inicial.
+Hacer que la aplicación VideoDownloader sea compatible con versiones antiguas y nuevas de macOS mediante compilación universal (soporte para arquitecturas x86_64 -Intel- y arm64 -Apple Silicon-) y pruebas en múltiples entornos. Esto se basa en la combinación de la Opción 1 (Compilación Universal) y la Opción 4 (Pruebas) de nuestro análisis inicial.
 
 ## Contexto del Proyecto
 - **Tecnologías usadas**: C++ con Qt6, compilado vía CMake, con scripts `compilar.sh` y `deploy.sh` para build y despliegue.
@@ -46,4 +46,4 @@ Hacer que la aplicación VimeoDownloader sea compatible con versiones antiguas y
 - La carpeta `temp_pruebas_compatibility` se puede borrar si no la necesitas.
 - Si surgen errores en entornos específicos, ajustar deployment target o versiones de Qt.
 
-Este plan asegura que VimeoDownloader funcione en macOS 10.13+ en ambos tipos de hardware.
+Este plan asegura que VideoDownloader funcione en macOS 10.13+ en ambos tipos de hardware.

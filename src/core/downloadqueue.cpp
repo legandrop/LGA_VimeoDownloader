@@ -1,5 +1,5 @@
-#include "vimeodownloader/downloadqueue.h"
-#include "vimeodownloader/toolsmanager.h"
+#include "videodownloader/downloadqueue.h"
+#include "videodownloader/toolsmanager.h"
 
 #include <QRegularExpression>
 #include <QMutexLocker>

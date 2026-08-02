@@ -1,9 +1,9 @@
-#include "vimeodownloader/mainwindow.h"
-#include "vimeodownloader/downloader.h"
-#include "vimeodownloader/colorutils.h"
-#include "vimeodownloader/toolsmanager.h"
-#include "vimeodownloader/downloadqueue.h"
-#include "vimeodownloader/videopassworddialog.h"
+#include "videodownloader/mainwindow.h"
+#include "videodownloader/downloader.h"
+#include "videodownloader/colorutils.h"
+#include "videodownloader/toolsmanager.h"
+#include "videodownloader/downloadqueue.h"
+#include "videodownloader/videopassworddialog.h"
 #include <QApplication>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -102,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_downloadQueue, &DownloadQueue::videoPasswordRequired, this, &MainWindow::onVideoPasswordRequired);
     
     // Configurar ventana
-    setWindowTitle("LGA_VimeoDownloader v0.89");
+    setWindowTitle("LGA_VideoDownloader v0.89");
 
     // Ajustar tamaño inicial y establecer ancho máximo
     adjustWindowSize();
@@ -666,19 +666,19 @@ QString MainWindow::getConfigPath() const
     QString appDataPath;
     
 #ifdef Q_OS_WIN
-    // Windows: %APPDATA%\LGA\VimeoDownloader\config.ini
+    // Windows: %APPDATA%\LGA\VideoDownloader\config.ini
     appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    appDataPath = appDataPath.replace("/VimeoDownloader", "").replace("\\VimeoDownloader", "");
-    appDataPath += "/VimeoDownloader";
+    appDataPath = appDataPath.replace("/VideoDownloader", "").replace("\\VideoDownloader", "");
+    appDataPath += "/VideoDownloader";
 #elif defined(Q_OS_MAC)
-    // macOS: ~/Library/Application Support/LGA/VimeoDownloader/config.ini
+    // macOS: ~/Library/Application Support/LGA/VideoDownloader/config.ini
     appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    appDataPath = appDataPath.replace("/VimeoDownloader", "");
-    appDataPath += "/VimeoDownloader";
+    appDataPath = appDataPath.replace("/VideoDownloader", "");
+    appDataPath += "/VideoDownloader";
 #else
-    // Linux: ~/.config/LGA/VimeoDownloader/config.ini
+    // Linux: ~/.config/LGA/VideoDownloader/config.ini
     appDataPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
-    appDataPath += "/LGA/VimeoDownloader";
+    appDataPath += "/LGA/VideoDownloader";
 #endif
     
     QDir dir(appDataPath);

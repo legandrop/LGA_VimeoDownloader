@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(VimeoDownloader VERSION 0.89 LANGUAGES CXX)
+project(VideoDownloader VERSION 0.89 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -70,7 +70,7 @@ set(RESOURCES
 
 # Configuración del icono para Windows
 if(WIN32)
-    set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.ico")
+    set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.ico")
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows_icon.rc.in" "${CMAKE_CURRENT_BINARY_DIR}/windows_icon.rc" @ONLY)
     set(RESOURCES ${RESOURCES} "${CMAKE_CURRENT_BINARY_DIR}/windows_icon.rc")
 endif()
@@ -88,13 +88,13 @@ set(SOURCES
 
 # Archivos de cabecera
 set(HEADERS
-    include/vimeodownloader/mainwindow.h
-    include/vimeodownloader/videopassworddialog.h
-    include/vimeodownloader/downloader.h
-    include/vimeodownloader/colorutils.h
-    include/vimeodownloader/toolsmanager.h
-    include/vimeodownloader/downloadqueue.h
-    include/vimeodownloader/downloaditem.h
+    include/videodownloader/mainwindow.h
+    include/videodownloader/videopassworddialog.h
+    include/videodownloader/downloader.h
+    include/videodownloader/colorutils.h
+    include/videodownloader/toolsmanager.h
+    include/videodownloader/downloadqueue.h
+    include/videodownloader/downloaditem.h
 )
 
 # Archivos de UI (comentado por ahora, no usamos archivos .ui)
@@ -125,6 +125,11 @@ if(WIN32)
 endif()
 
 # Incluir directorios
+# Version al C++: fuente unica de verdad en el project() de arriba.
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    VIDEODOWNLOADER_VERSION="${PROJECT_VERSION}"
+)
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -143,26 +148,26 @@ if(APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Info.plist.in"
-        MACOSX_BUNDLE_BUNDLE_NAME "VimeoDownloader"
+        MACOSX_BUNDLE_BUNDLE_NAME "VideoDownloader"
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
-        MACOSX_BUNDLE_IDENTIFIER "com.lga.vimeodownloader"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "com.lga.vimeodownloader"
-        MACOSX_BUNDLE_EXECUTABLE_NAME "VimeoDownloader"
+        MACOSX_BUNDLE_IDENTIFIER "com.lga.videodownloader"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.lga.videodownloader"
+        MACOSX_BUNDLE_EXECUTABLE_NAME "VideoDownloader"
         MACOSX_BUNDLE_COPYRIGHT "© 2024 LGA. Todos los derechos reservados."
         # Configurar versiones de macOS soportadas
-        MACOSX_BUNDLE_INFO_STRING "VimeoDownloader ${PROJECT_VERSION}, Compatible con macOS 10.15+"
+        MACOSX_BUNDLE_INFO_STRING "VideoDownloader ${PROJECT_VERSION}, Compatible con macOS 10.15+"
     )
     
     # Si existe un icono para macOS, configurarlo
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.icns")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.icns")
         set_target_properties(${PROJECT_NAME} PROPERTIES
-            MACOSX_BUNDLE_ICON_FILE "LGA_VimeoDownloader.icns"
+            MACOSX_BUNDLE_ICON_FILE "LGA_VideoDownloader.icns"
         )
         # Copiar el icono al bundle
-        set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.icns"
+        set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.icns"
             PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VimeoDownloader.icns")
+        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/LGA_VideoDownloader.icns")
     endif()
 endif()
 

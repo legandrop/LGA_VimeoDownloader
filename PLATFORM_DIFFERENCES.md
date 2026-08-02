@@ -1,4 +1,4 @@
-# Platform Differences - VimeoDownloader
+# Platform Differences - VideoDownloader
 
 This document explains the differences in yt-dlp and ffmpeg installation and management between different operating systems.
 
@@ -90,10 +90,10 @@ Could use similar approaches to macOS/Windows:
 
 ### macOS
 ```
-VimeoDownloader.app/
+VideoDownloader.app/
 └── Contents/
     └── MacOS/
-        ├── VimeoDownloader
+        ├── VideoDownloader
         └── toolsmac/
             ├── yt-dlp
             ├── ffmpeg
@@ -102,8 +102,8 @@ VimeoDownloader.app/
 
 ### Windows
 ```
-VimeoDownloader/
-├── VimeoDownloader.exe
+VideoDownloader/
+├── VideoDownloader.exe
 └── tools/
     ├── yt-dlp.exe
     ├── ffmpeg.exe

@@ -1,4 +1,4 @@
-#include "vimeodownloader/colorutils.h"
+#include "videodownloader/colorutils.h"
 
 // Definición de colores basados en el tema actualizado
 const QString ColorUtils::BG_PRINCIPAL = "#161616";

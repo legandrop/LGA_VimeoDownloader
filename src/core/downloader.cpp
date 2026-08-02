@@ -1,4 +1,4 @@
-#include "vimeodownloader/downloader.h"
+#include "videodownloader/downloader.h"
 
 #include <QDebug>
 #include <QStandardPaths>

@@ -1,4 +1,4 @@
-# VimeoDownloader
+# VideoDownloader
 
 Una aplicación Qt/C++ multiplataforma para descargar videos de Vimeo y YouTube usando yt-dlp con sistema de cola de descargas. **Completamente portable** - incluye todas las herramientas necesarias.
 
@@ -71,13 +71,13 @@ limpiar.bat
 ## Estructura del Proyecto
 
 ```
-VimeoDownloader/
+VideoDownloader/
 ├── CMakeLists.txt          # Configuración de CMake
 ├── compilar.sh             # Script de compilación para desarrollo
 ├── deploy.sh               # Script de despliegue para producción
 ├── limpiar.sh              # Script para limpiar la compilación
 ├── include/                # Archivos de cabecera (.h)
-│   └── vimeodownloader/
+│   └── videodownloader/
 ├── src/                    # Código fuente (.cpp)
 │   ├── core/               # Lógica de descarga y cola
 │   ├── ui/                 # Interfaz de usuario
@@ -114,8 +114,8 @@ VimeoDownloader/
 ### Configuración
 
 La aplicación guarda las credenciales de Vimeo en:
-- **macOS**: `~/Library/Application Support/LGA/VimeoDownloader/config.ini`
-- **Windows**: `%APPDATA%\LGA\VimeoDownloader\config.ini`
+- **macOS**: `~/Library/Application Support/LGA/VideoDownloader/config.ini`
+- **Windows**: `%APPDATA%\LGA\VideoDownloader\config.ini`
 
 ### Interfaz de Usuario
 
