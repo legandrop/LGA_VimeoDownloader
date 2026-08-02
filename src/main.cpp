@@ -122,7 +122,15 @@ int main(int argc, char *argv[])
         }
     }
     
-    // Cargar y aplicar el tema oscuro
+    // Cargar y aplicar el tema oscuro.
+    //
+    // OJO: este open() FALLA a proposito y la app usa el fallback de abajo.
+    // El .qrc declara prefix="/styles" con el archivo en "styles/", asi que el
+    // recurso real es :/styles/styles/dark_theme.qss y esta ruta no existe.
+    // `dark_theme.qss` quedo desactualizado: sus reglas de QGroupBox/QLineEdit
+    // rompen el layout. El estilo REAL de la app es ColorUtils::getStyleSheet().
+    // Si alguna vez se quiere revivir el .qss, hay que arreglar el .qss primero
+    // y recien despues el prefix del .qrc; no al reves.
     QFile styleFile(":/styles/dark_theme.qss");
     if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
         QTextStream stream(&styleFile);

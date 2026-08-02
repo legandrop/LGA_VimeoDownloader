@@ -1,5 +1,10 @@
 <RCC>
-    <qresource prefix="/">
+    <!-- NO cambiar este prefix a "/". Con prefix="/styles" el recurso real es
+         :/styles/styles/dark_theme.qss, y main.cpp abre :/styles/dark_theme.qss,
+         asi que el archivo NUNCA carga y la app usa ColorUtils::getStyleSheet().
+         Eso es lo correcto: dark_theme.qss quedo desactualizado y sus reglas de
+         QGroupBox/QLineEdit rompen el layout. El fallback es el estilo real. -->
+    <qresource prefix="/styles">
         <file>styles/dark_theme.qss</file>
     </qresource>
     <qresource prefix="/icons">
