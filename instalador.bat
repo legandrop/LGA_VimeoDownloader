@@ -1,9 +1,24 @@
 @echo off
 echo Preparando instalador para VideoDownloader...
 
-REM Verificar si ya existe la carpeta deploy
-if not exist deploy (
-    echo Error: La carpeta deploy no existe. Ejecute primero deploy.bat
+REM Verificar que deploy tenga el ejecutable actual.
+REM No alcanza con que la carpeta exista: un deploy anterior a un rename deja
+REM un .exe con el nombre viejo, el instalador lo empaqueta igual y los accesos
+REM directos quedan apuntando a un archivo que no existe.
+if not exist deploy\VideoDownloader.exe (
+    echo Error: falta deploy\VideoDownloader.exe. Ejecute primero deploy.bat
+    exit /b 1
+)
+
+REM Abortar si el build es posterior a lo desplegado: `xcopy /L /D` lista el
+REM origen solo cuando es mas nuevo que el destino, y no copia nada.
+set "DEPLOY_STALE="
+if exist build\VideoDownloader.exe (
+    for /f "delims=" %%A in ('xcopy build\VideoDownloader.exe deploy\ /L /D /Y 2^>nul ^| find /i "VideoDownloader.exe"') do set "DEPLOY_STALE=1"
+)
+if defined DEPLOY_STALE (
+    echo Error: deploy\VideoDownloader.exe es mas viejo que build\VideoDownloader.exe
+    echo Ejecute deploy.bat para regenerar el deploy antes de armar el instalador.
     exit /b 1
 )
 

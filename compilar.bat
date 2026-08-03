@@ -39,7 +39,10 @@ echo Preparando carpeta tools...
 if not exist tools mkdir tools
 if exist ..\tools\*.* (
     echo Copiando herramientas desde carpeta tools del proyecto...
-    copy /Y ..\tools\*.* tools\
+    REM Solo binarios, igual que deploy.bat: `tools\` tambien aloja utilidades
+    REM del repo que no son parte de la app.
+    copy /Y ..\tools\*.exe tools\
+    copy /Y ..\tools\*.dll tools\
 ) else (
     echo Carpeta tools del proyecto no encontrada o vacía.
 )

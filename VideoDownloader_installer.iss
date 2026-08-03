@@ -13,25 +13,26 @@ OutputBaseFilename=VideoDownloader_Setup
 PrivilegesRequired=lowest 
 UsePreviousAppDir=no 
 DirExistsWarning=no 
-
+SetupIconFile=resources\icons\LGA_VideoDownloader.ico 
+ 
 [Files] 
 Source: "deploy\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs 
-
+ 
 [Icons] 
 Name: "{group}\VideoDownloader"; Filename: "{app}\VideoDownloader.exe" 
 Name: "{userdesktop}\VideoDownloader"; Filename: "{app}\VideoDownloader.exe"; Tasks: desktopicon 
-
+ 
 [Tasks] 
 Name: "desktopicon"; Description: "Crear un icono en el escritorio"; GroupDescription: "Iconos adicionales:" 
-
+ 
 [Run] 
 Filename: "{app}\VideoDownloader.exe"; Description: "Ejecutar VideoDownloader"; Flags: nowait postinstall skipifsilent 
-
+ 
 [Code] 
 const 
   LegacyUninstallKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\VimeoDownloader_is1'; 
   LegacyInstallDir = 'C:\Portable\LGA\VimeoDownloader'; 
-
+ 
 function PrepareToInstall(var NeedsRestart: Boolean): String; 
 var 
   ResultCode: Integer; 
@@ -43,7 +44,7 @@ begin
   RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, LegacyUninstallKey); 
   RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, LegacyUninstallKey); 
 end; 
-
+ 
 procedure CurStepChanged(CurStep: TSetupStep); 
 begin 
   if CurStep = ssPostInstall then 
@@ -56,7 +57,7 @@ begin
     end; 
   end; 
 end; 
-
+ 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep); 
 var 
   ConfigPath: string; 

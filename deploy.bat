@@ -42,7 +42,10 @@ echo Preparando carpeta tools para deploy...
 if not exist deploy\tools mkdir deploy\tools
 if exist tools\*.* (
     echo Copiando herramientas a carpeta deploy...
-    copy /Y tools\*.* deploy\tools\
+    REM Solo binarios. `tools\` tambien aloja utilidades del repo que no se
+    REM distribuyen con la app, y un `*.*` las empaqueta sin que nadie lo note.
+    copy /Y tools\*.exe deploy\tools\
+    copy /Y tools\*.dll deploy\tools\
 ) else (
     echo Carpeta tools no encontrada o vacía.
 )
