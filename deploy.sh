@@ -1,5 +1,29 @@
 #!/bin/bash
 
+CREATE_ZIP=false
+NO_RUN=false
+for arg in "$@"; do
+    case "$arg" in
+        --zip) CREATE_ZIP=true ;;
+        --no-run) NO_RUN=true ;;
+        -h|--help)
+            echo "Uso: $0 [--zip] [--no-run]"
+            echo "  --zip     Crear deploy/VideoDownloader_Mac_v<version>.zip firmado"
+            echo "  --no-run  No ejecutar la app al terminar"
+            exit 0
+            ;;
+    esac
+done
+
+# Version UNICA: sale del CMakeLists. Antes el Info.plist la traia hardcodeada y quedo
+# desfasada del proyecto.
+APP_VERSION="$(sed -n 's/^project(VideoDownloader VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt | head -1)"
+if [ -z "$APP_VERSION" ]; then
+    echo "Error: no se pudo leer la version del CMakeLists.txt"
+    exit 1
+fi
+echo "Version: $APP_VERSION"
+
 # BORRAR DEPLOY ANTERIOR
 if [ -d "deploy" ]; then
     echo "Eliminando deploy anterior..."
@@ -86,7 +110,7 @@ cat > deploy/VideoDownloader.app/Contents/Info.plist << EOL
     <key>CFBundleVersion</key>
     <string>0.86</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.86</string>
+    <string>${APP_VERSION}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>LSMinimumSystemVersion</key>
@@ -117,10 +141,21 @@ cat > deploy/VideoDownloader.app/Contents/Info.plist << EOL
 </plist>
 EOL
 
-# Nota: macdeployqt tiene problemas con Homebrew Qt en macOS Tahoe
-# La aplicación funcionará sin él si Qt está disponible en el sistema destino
-# "$QT_PATH/bin/macdeployqt" deploy/VideoDownloader.app
-echo "Omitiendo macdeployqt (problemas conocidos con Homebrew Qt en macOS Tahoe)"
+# macdeployqt + fixup: el bundle tiene que ser AUTOCONTENIDO.
+# macdeployqt solo no alcanza con el Qt de Homebrew —que parte Qt en un keg por modulo y
+# arrastra dependencias entre ellos que la herramienta no persigue: sin QtDBus el binario
+# muere en dyld, y quedan QtSvg, QtPdf y las QtVirtualKeyboard declaradas como @rpath pero
+# nunca copiadas—. `tools/macos/bundle_fixup.py` completa eso y VERIFICA que no quede
+# ninguna referencia fuera del bundle. Ver docs.
+echo ""
+echo "Ejecutando macdeployqt..."
+"$QT_PATH/opt/qtbase/bin/macdeployqt" deploy/VideoDownloader.app >/dev/null 2>&1 || true
+
+echo "Completando dependencias del bundle..."
+if ! python3 tools/macos/bundle_fixup.py deploy/VideoDownloader.app; then
+    echo "ERROR: el bundle quedo con dependencias fuera de el; no se puede distribuir asi."
+    exit 1
+fi
 
 # Crear carpeta toolsmac en deploy y copiar herramientas
 echo ""
@@ -136,11 +171,31 @@ fi
 # Hacer ejecutable el script
 chmod +x deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader
 
+# Firma ad-hoc del bundle YA armado: la firma cubre el contenido, asi que va al final. No
+# es notarizacion ni confianza de Gatekeeper (sigue haciendo falta el `xattr -cr`): sirve
+# para poder verificar con `codesign --verify` que el bundle llego entero.
+echo "Firmando el bundle (ad-hoc)..."
+codesign --force --deep --sign - deploy/VideoDownloader.app
+
+if [ "$CREATE_ZIP" = "true" ]; then
+    ZIP_NAME="VideoDownloader_Mac_v${APP_VERSION}.zip"
+    # ditto y NO zip: `zip -r` RESUELVE los symlinks en vez de guardarlos, y un .app de Qt
+    # esta lleno (Versions/Current, el binario de cada framework). Con zip el bundle llega
+    # al usuario mucho mas pesado, con cada framework duplicado, y la firma invalida.
+    rm -f "deploy/${ZIP_NAME}"
+    (cd deploy && ditto -c -k --sequesterRsrc --keepParent "VideoDownloader.app" "${ZIP_NAME}")
+    echo "ZIP creado: deploy/${ZIP_NAME}"
+fi
+
 echo
 echo "Implementación completada. La aplicación portable está en la carpeta 'deploy/VideoDownloader.app'."
 echo
 
-# Ejecutar la aplicación implementada
-echo "Ejecutando VideoDownloader..."
-export QT_QPA_PLATFORM_PLUGIN_PATH="/opt/homebrew/share/qt/plugins/platforms"
-./deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader
+if [ "$NO_RUN" = "true" ]; then
+    echo "Omitiendo ejecución (--no-run)."
+else
+    # Sin QT_QPA_PLATFORM_PLUGIN_PATH: el bundle trae sus propios plugins. Si hiciera falta
+    # apuntar a los de Homebrew, es que el bundle NO quedo autocontenido.
+    echo "Ejecutando VideoDownloader..."
+    ./deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader
+fi
