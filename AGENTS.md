@@ -55,6 +55,9 @@ Lo que mas cuesta si no se lee:
 ## Versionado y changelog
 
 - `CMakeLists.txt` es la **unica fuente de verdad** del numero de version, via `project(VideoDownloader VERSION x.y ...)`.
+- El archivo `VERSION` es un espejo **DERIVADO**, no la fuente: existe para que los scripts de shell (deploy, DMG, instalador) lean una linea en vez de parsear CMake, y para que este repo tenga la misma forma que el resto de las apps LGA. Lo escribe `./sync_version.sh`; **nunca se edita a mano**. Si `VERSION` y `CMakeLists.txt` discrepan, el que esta mal es `VERSION` (`./sync_version.sh --check-only` lo detecta).
+- El codigo C++ usa la macro `VIDEODOWNLOADER_VERSION`, **nunca un literal**. Lo mismo el `Info.plist`: se deriva de `PROJECT_VERSION` via `MACOSX_BUNDLE_BUNDLE_VERSION` / `MACOSX_BUNDLE_SHORT_VERSION_STRING`.
+- **Los tres lugares por donde se escapa el numero** (los tres estuvieron mal en este repo): el `cmake/Info.plist.in`, el heredoc de `deploy.sh` que reescribe el plist entero al deployar, y los `setWindowTitle()`. Al bumpear, revisarlos.
 - Changelog principal: `docs/ChangeLog.md`.
 - El numero al comienzo del changelog es la version mas alta registrada. Si el changelog ya esta por encima de `CMakeLists.txt`, **no subir version**: agregar la entrada nueva arriba de las existentes dentro de esa version.
 - La entrada nueva va inmediatamente debajo del numero de version, con una linea en blanco debajo.

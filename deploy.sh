@@ -111,7 +111,7 @@ cat > deploy/VideoDownloader.app/Contents/Info.plist << EOL
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>0.86</string>
+    <string>${APP_VERSION}</string>
     <key>CFBundleShortVersionString</key>
     <string>${APP_VERSION}</string>
     <key>CFBundleInfoDictionaryVersion</key>

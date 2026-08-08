@@ -102,7 +102,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_downloadQueue, &DownloadQueue::videoPasswordRequired, this, &MainWindow::onVideoPasswordRequired);
     
     // Configurar ventana
-    setWindowTitle("LGA_VideoDownloader v0.89");
+    // La version sale de la macro del CMakeLists, nunca de un literal: hardcodeada
+    // aca quedaba desfasada en cuanto alguien bumpeaba el proyecto.
+    setWindowTitle(QStringLiteral("LGA_VideoDownloader v" VIDEODOWNLOADER_VERSION));
 
     // Ajustar tamaño inicial y establecer ancho máximo
     adjustWindowSize();
