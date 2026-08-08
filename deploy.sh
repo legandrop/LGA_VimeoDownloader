@@ -1,14 +1,17 @@
 #!/bin/bash
 
 CREATE_ZIP=false
+CREATE_DMG=false
 NO_RUN=false
 for arg in "$@"; do
     case "$arg" in
         --zip) CREATE_ZIP=true ;;
+        --dmg) CREATE_DMG=true ;;
         --no-run) NO_RUN=true ;;
         -h|--help)
-            echo "Uso: $0 [--zip] [--no-run]"
-            echo "  --zip     Crear deploy/VideoDownloader_Mac_v<version>.zip firmado"
+            echo "Uso: $0 [--zip] [--dmg] [--no-run]"
+            echo "  --zip     Crear deploy/VideoDownloader_Mac_v<version>.zip firmado (actualizacion)"
+            echo "  --dmg     Crear deploy/VideoDownloader_Mac_v<version>.dmg (primera instalacion)"
             echo "  --no-run  No ejecutar la app al terminar"
             exit 0
             ;;
@@ -185,6 +188,13 @@ if [ "$CREATE_ZIP" = "true" ]; then
     rm -f "deploy/${ZIP_NAME}"
     (cd deploy && ditto -c -k --sequesterRsrc --keepParent "VideoDownloader.app" "${ZIP_NAME}")
     echo "ZIP creado: deploy/${ZIP_NAME}"
+fi
+
+# El DMG es el artefacto de PRIMERA INSTALACION; el ZIP de arriba es el de actualizacion y
+# los dos no son intercambiables. Ver ../LGA_Base_QT_C_Py/docs/Doc_Deploy_macOS.md.
+if [ "$CREATE_DMG" = "true" ]; then
+    rm -f "deploy/VideoDownloader_Mac_v${APP_VERSION}.dmg"
+    bash ./create_dmg.sh --no-open
 fi
 
 echo
