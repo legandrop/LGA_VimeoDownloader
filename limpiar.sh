@@ -8,7 +8,7 @@ echo "Limpiando VideoDownloader..."
 # workspace `LGA_VideoDownloader` y provoca que VSCode los relance varias
 # veces al arrancar el script). Apuntar al path completo del ejecutable
 # dentro del .app.
-pkill -f "VideoDownloader.app/Contents/MacOS/VideoDownloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
+pkill -f "LGA Video Downloader.app/Contents/MacOS/LGA Video Downloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
 sleep 1
 
 # Eliminar directorios de compilación

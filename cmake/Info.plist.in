@@ -7,7 +7,7 @@
      PROJECT_VERSION via las propiedades MACOSX_BUNDLE_*. -->
 <dict>
     <key>CFBundleExecutable</key>
-    <string>VideoDownloader</string>
+    <string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
     <!-- Icono de la aplicacion.
          CFBundleIconName apunta al icono moderno dentro de Assets.car (Icon Composer);
          es la clave que usa macOS 26. CFBundleIconFile es el fallback al .icns suelto.
@@ -20,9 +20,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.lga.videodownloader</string>
     <key>CFBundleName</key>
-    <string>VideoDownloader</string>
+    <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
     <key>CFBundleDisplayName</key>
-    <string>Video Downloader</string>
+    <string>${MACOSX_BUNDLE_BUNDLE_NAME}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>

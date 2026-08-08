@@ -148,15 +148,21 @@ if(APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Info.plist.in"
-        MACOSX_BUNDLE_BUNDLE_NAME "VideoDownloader"
+        # Convencion LGA: el nombre visible arranca con "LGA" para que todas las apps queden
+        # juntas en /Applications, donde Finder ordena por el nombre de ARCHIVO del bundle (no
+        # por CFBundleName). OUTPUT_NAME define el .app Y el ejecutable de adentro: en un target
+        # MACOSX_BUNDLE no se pueden separar. El nombre de ARCHIVO del .zip/.dmg es otra cosa
+        # (LGA_Video_Downloader_Mac_vX): va sin espacios porque viaja por URL en los releases.
+        OUTPUT_NAME "LGA Video Downloader"
+        MACOSX_BUNDLE_BUNDLE_NAME "LGA Video Downloader"
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
         MACOSX_BUNDLE_IDENTIFIER "com.lga.videodownloader"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.lga.videodownloader"
-        MACOSX_BUNDLE_EXECUTABLE_NAME "VideoDownloader"
+        MACOSX_BUNDLE_EXECUTABLE_NAME "LGA Video Downloader"
         MACOSX_BUNDLE_COPYRIGHT "© 2024 LGA. Todos los derechos reservados."
         # Configurar versiones de macOS soportadas
-        MACOSX_BUNDLE_INFO_STRING "VideoDownloader ${PROJECT_VERSION}, Compatible con macOS 10.15+"
+        MACOSX_BUNDLE_INFO_STRING "LGA Video Downloader ${PROJECT_VERSION}, Compatible con macOS 10.15+"
     )
     
     # Icono de macOS: pipeline Icon Composer. El icono se disena en

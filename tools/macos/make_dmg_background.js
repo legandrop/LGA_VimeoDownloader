@@ -32,21 +32,37 @@ ObjC.import('Cocoa');
 ObjC.import('stdlib');
 
 // --- Geometria, en PUNTOS. Tiene que coincidir con create_dmg.sh -----------------------
-var WIN_W = 920, WIN_H = 420;          // AREA DE CONTENIDO de la ventana (no el `bounds`)
+// El ancho NO es el de la ventana: Finder ignora el tamano guardado y abre con el que se le
+// canta —hereda el de la ventana de Finder que ya estaba abierta, y solo con todo minimizado
+// usa su default de ~920—. Como el fondo se ancla arriba-IZQUIERDA, disenar contra 920 deja
+// la composicion corrida a la derecha y CORTADA en cualquier ventana mas angosta, que es el
+// caso normal.
+//
+// Criterio robado de OnyX, que aguanta cualquier tamano: la composicion se disena contra una
+// ventana CHICA (~620 pt) y ocupa poco ancho. En una ventana normal queda centrada; en una
+// muy ancha queda hacia la izquierda, que se ve bien; y en una angosta no se corta nada.
+var WIN_W = 620, WIN_H = 420;          // ancho de REFERENCIA del diseno, no el de la ventana
 var CANVAS_W = 3000, CANVAS_H = 1900;  // lienzo gigante (ver restriccion 1)
 
 // TODO se alinea contra UN SOLO eje: titulo, subtitulo, flecha y el par de iconos. Las dos
 // columnas se definen como CX -/+ COL_DX, asi la simetria de la flecha sale por
 // construccion y no depende de que dos numeros escritos a mano coincidan.
 var CX = WIN_W / 2;
-var COL_DX = 130;
+var COL_DX = 125;
 var ICON_SIZE = 96;                    // tiene que coincidir con el icon_size del .DS_Store
 
 var APP_X = CX - COL_DX;
 var APPS_X = CX + COL_DX;
 
-// Finder dibuja el label centrado, a media altura de icono + ~20 pt bajo el borde.
-var LABEL_DY = ICON_SIZE / 2 + 20;
+// Distancia del centro del icono al centro de la CAJA DE TEXTO del label. Medido contra
+// capturas reales, no estimado: con +20 la placa quedaba 2.5 pt mas abajo que la caja, y el
+// texto se veia pegado al borde de arriba.
+//
+// Como se mide: el aire ENCIMA del texto es constante entre labels (~3.5 pt, el tope de las
+// mayusculas) y el de abajo varia (6.5 pt en un nombre con descendentes, 9 pt en "LEEME.txt",
+// que no tiene ninguno). Esa asimetria es la senal de que la placa esta corrida, no de que el
+// texto este mal: si estuviera centrada, el label sin descendentes quedaria simetrico.
+var LABEL_DY = ICON_SIZE / 2 + 17.5;
 
 // La composicion va pegada arriba a proposito: la barra de titulo de la ventana ya hace de
 // aire por encima, y lo que se agradece es el margen de abajo.
@@ -62,8 +78,14 @@ var ROW2_LABEL_Y = ROW2_Y + LABEL_DY;
 var ARROW_PAD = 40;
 var ARROW_HALF = COL_DX - ICON_SIZE / 2 - ARROW_PAD;
 
-var PLATE_W = 176, PLATE_H = 25;
-var README_PLATE_W = 118;
+// Las placas se MIDEN contra el texto de cada label en vez de tener un ancho fijo: con un
+// ancho fijo, un nombre corto como "Applications" queda flotando en una mancha blanca enorme
+// y uno largo se sale. El texto se mide con la misma fuente y el mismo cuerpo que usa Finder
+// (`systemFontOfSize(TEXT_SIZE)`, el mismo valor que va al `.DS_Store`), asi que la placa
+// calza. `TEXT_SIZE` tiene que coincidir con el `text_size` de create_dmg.sh.
+var TEXT_SIZE = 13;
+var PLATE_PAD_X = 16;                  // aire a cada lado del texto
+var PLATE_PAD_Y = 4;                   // aire arriba y abajo
 
 var BG = [18, 18, 22];
 var TITLE_COL = [245, 245, 250];
@@ -108,7 +130,15 @@ function drawCenteredText(str, cx, cyTop, scale, fontSize, rgb) {
     ns.drawInRectWithAttributes(rect(cx * scale - size.width / 2, y, size.width, size.height), attrs);
 }
 
-function render(scale, title, subtitle) {
+// Mide el ancho/alto que ocupa un texto con la fuente del sistema, para dimensionar su placa.
+function measureText(str, scale, fontSize) {
+    var font = $.NSFont.systemFontOfSize(fontSize * scale);
+    var attrs = $.NSDictionary.dictionaryWithObjectsForKeys($([font]), $([$('NSFont')]));
+    var size = $(str).sizeWithAttributes(attrs);
+    return { w: size.width, h: size.height };
+}
+
+function render(scale, title, subtitle, appLabel) {
     var w = CANVAS_W * scale, h = CANVAS_H * scale;
     var rep = $.NSBitmapImageRep.alloc
         .initWithBitmapDataPlanesPixelsWidePixelsHighBitsPerSampleSamplesPerPixelHasAlphaIsPlanarColorSpaceNameBytesPerRowBitsPerPixel(
@@ -121,18 +151,18 @@ function render(scale, title, subtitle) {
     color(BG).set;
     $.NSBezierPath.bezierPathWithRect(rect(0, 0, w, h)).fill;
 
-    // Glow suave detras de la zona de iconos: UN gradiente radial que termina en
-    // transparente, asi el borde exterior queda EXACTAMENTE en el color plano del fondo.
-    // Cualquier degrade que llegara al borde del lienzo haria visible el limite del bitmap,
-    // que es justo lo que este diseno evita.
+    // SIN glow ni degrade de ningun tipo: el fondo es UN color plano y nada mas.
     //
-    // Un gradiente y no un apilado de elipses semitransparentes: AppKit compone cada figura
-    // por separado contra el lienzo, asi que las alphas se ACUMULAN y lo que en otro
-    // renderer sale como un halo apenas perceptible, aca sale como una mancha violeta.
-    var gw = 960 * scale, gh = 480 * scale;
-    var glow = $.NSGradient.alloc.initWithStartingColorEndingColor(
-        color([70, 60, 110], 0.06), color([70, 60, 110], 0.0));
-    glow.drawInRectRelativeCenterPosition(rect(0, h - gh, gw, gh), { x: 0, y: 0 });
+    // Hubo un glow radial y hubo que sacarlo: `drawInRectRelativeCenterPosition` NO llega al
+    // color final en el borde del rect —queda a ~2 niveles del fondo— y eso deja un escalon
+    // horizontal a lo ancho de TODO el lienzo, visible como una banda cuando la ventana es
+    // grande. Dos niveles parecen nada medidos de a un pixel, pero sobre un area oscura y
+    // plana el ojo los lee como una linea.
+    //
+    // Cualquier cosa que se dibuje sobre el fondo tiene que terminar EXACTAMENTE en el color
+    // plano antes de llegar a su propio borde, o reaparece la costura. Con el lienzo gigante
+    // que exige Finder (ver restriccion 1) eso es dificil de garantizar, y un fondo plano no
+    // tiene el problema por construccion.
 
     drawCenteredText(title, CX, TITLE_Y, scale, 28, TITLE_COL);
     drawCenteredText(subtitle, CX, SUBTITLE_Y, scale, 13, SUB_COL);
@@ -155,15 +185,18 @@ function render(scale, title, subtitle) {
     color([190, 130, 248]).set;
     tri.fill;
 
-    // Placas claras debajo de cada label (ver restriccion 2).
+    // Placas claras debajo de cada label (ver restriccion 2), MEDIDAS contra su propio texto.
     var plates = [
-        [APP_X, ROW1_LABEL_Y, PLATE_W],
-        [APPS_X, ROW1_LABEL_Y, PLATE_W],
-        [APP_X, ROW2_LABEL_Y, README_PLATE_W]
+        [APP_X, ROW1_LABEL_Y, appLabel],
+        [APPS_X, ROW1_LABEL_Y, 'Applications'],
+        [APP_X, ROW2_LABEL_Y, 'LEEME.txt']
     ];
     color(PLATE_COL).set;
     for (var p = 0; p < plates.length; p++) {
-        var pcx = plates[p][0] * scale, pw = plates[p][2] * scale, ph = PLATE_H * scale;
+        var m = measureText(plates[p][2], scale, TEXT_SIZE);
+        var pw = m.w + PLATE_PAD_X * 2 * scale;
+        var ph = m.h + PLATE_PAD_Y * 2 * scale;
+        var pcx = plates[p][0] * scale;
         var pcy = flipY(scale, plates[p][1]);
         $.NSBezierPath.bezierPathWithRoundedRectXRadiusYRadius(
             rect(pcx - pw / 2, pcy - ph / 2, pw, ph), ph / 2, ph / 2).fill;
@@ -190,10 +223,13 @@ function run(argv) {
     var out = argv[0];
     var title = argv.length > 1 ? argv[1] : 'LGA Base QT C Py';
     var subtitle = argv.length > 2 ? argv[2] : 'Drag to install into your Applications folder';
+    // Cuarto argumento: el nombre del .app tal cual lo muestra Finder debajo del icono. Sin
+    // el, la placa se dimensiona contra el titulo, que suele ser mas largo.
+    var appLabel = argv.length > 3 ? argv[3] : title;
 
     var png1x = out + '.1x.png', png2x = out + '.2x.png';
-    writePNG(render(1, title, subtitle), png1x);
-    writePNG(render(2, title, subtitle), png2x);
+    writePNG(render(1, title, subtitle, appLabel), png1x);
+    writePNG(render(2, title, subtitle, appLabel), png2x);
 
     // -cathidpicheck arma el TIFF multi-representacion que Finder usa como @2x. Comprime,
     // asi que el lienzo gigante termina pesando unos cientos de KB.

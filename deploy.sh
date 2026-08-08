@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# El .app y el ejecutable se llaman "LGA Video Downloader" (convencion LGA: el nombre visible
+# arranca con "LGA" para que todas las apps queden juntas en /Applications). El nombre de
+# ARCHIVO de los artefactos es otro y va sin espacios, porque viaja por URL en los releases.
+APP_NAME="LGA Video Downloader"
+ARTIFACT_NAME="LGA_Video_Downloader"
+
 CREATE_ZIP=false
 CREATE_DMG=false
 NO_RUN=false
@@ -10,8 +16,8 @@ for arg in "$@"; do
         --no-run) NO_RUN=true ;;
         -h|--help)
             echo "Uso: $0 [--zip] [--dmg] [--no-run]"
-            echo "  --zip     Crear deploy/VideoDownloader_Mac_v<version>.zip firmado (actualizacion)"
-            echo "  --dmg     Crear deploy/VideoDownloader_Mac_v<version>.dmg (primera instalacion)"
+            echo "  --zip     Crear deploy/${ARTIFACT_NAME}_Mac_v<version>.zip firmado (actualizacion)"
+            echo "  --dmg     Crear deploy/${ARTIFACT_NAME}_Mac_v<version>.dmg (primera instalacion)"
             echo "  --no-run  No ejecutar la app al terminar"
             exit 0
             ;;
@@ -41,7 +47,7 @@ echo "Implementando VideoDownloader..."
 # workspace `LGA_VideoDownloader` y provoca que VSCode los relance varias
 # veces al arrancar el script). Apuntar al path completo del ejecutable
 # dentro del .app.
-pkill -f "VideoDownloader.app/Contents/MacOS/VideoDownloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
+pkill -f "${APP_NAME}.app/Contents/MacOS/${APP_NAME}" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
 sleep 1
 
 # Verificar que Qt de Homebrew está instalado (compatible con macOS Tahoe)
@@ -83,13 +89,13 @@ cmake --build . --config Release
 cd ..
 
 # Crear estructura del bundle
-mkdir -p deploy/VideoDownloader.app/Contents/{MacOS,Resources,Frameworks}
-cp build/VideoDownloader.app/Contents/MacOS/VideoDownloader deploy/VideoDownloader.app/Contents/MacOS/
+mkdir -p "deploy/${APP_NAME}.app/Contents"/{MacOS,Resources,Frameworks}
+cp "build/${APP_NAME}.app/Contents/MacOS/${APP_NAME}" "deploy/${APP_NAME}.app/Contents/MacOS/"
 
 # Copiar el ícono al bundle si existe
 if [ -f "resources/icons/LGA_VideoDownloader.icns" ]; then
     echo "Copiando ícono al bundle..."
-    cp resources/icons/LGA_VideoDownloader.icns deploy/VideoDownloader.app/Contents/Resources/
+    cp resources/icons/LGA_VideoDownloader.icns "deploy/${APP_NAME}.app/Contents/Resources/"
 fi
 
 # Crear Info.plist con configuración mejorada de compatibilidad
@@ -104,21 +110,21 @@ fi
 # (LSMinimumSystemVersion, LSArchitecturePriority, NSAppTransportSecurity,
 # NSSupportsAutomaticGraphicsSwitching). Lo correcto es moverlas al template y que el deploy
 # NO toque el plist. Al tocar cualquier clave de aca, revisar cmake/Info.plist.in tambien.
-cat > deploy/VideoDownloader.app/Contents/Info.plist << EOL
+cat > "deploy/${APP_NAME}.app/Contents/Info.plist" << EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>VideoDownloader</string>
+    <string>${APP_NAME}</string>
     <key>CFBundleIconFile</key>
     <string>LGA_VideoDownloader</string>
     <key>CFBundleIdentifier</key>
     <string>com.lga.videodownloader</string>
     <key>CFBundleName</key>
-    <string>VideoDownloader</string>
+    <string>${APP_NAME}</string>
     <key>CFBundleDisplayName</key>
-    <string>Video Downloader</string>
+    <string>${APP_NAME}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
@@ -163,10 +169,10 @@ EOL
 # ninguna referencia fuera del bundle. Ver docs.
 echo ""
 echo "Ejecutando macdeployqt..."
-"$QT_PATH/opt/qtbase/bin/macdeployqt" deploy/VideoDownloader.app >/dev/null 2>&1 || true
+"$QT_PATH/opt/qtbase/bin/macdeployqt" "deploy/${APP_NAME}.app" >/dev/null 2>&1 || true
 
 echo "Completando dependencias del bundle..."
-if ! python3 tools/macos/bundle_fixup.py deploy/VideoDownloader.app; then
+if ! python3 tools/macos/bundle_fixup.py "deploy/${APP_NAME}.app"; then
     echo "ERROR: el bundle quedo con dependencias fuera de el; no se puede distribuir asi."
     exit 1
 fi
@@ -176,40 +182,40 @@ echo ""
 echo "Preparando carpeta toolsmac para deploy..."
 if [ -d "toolsmac" ]; then
     echo "Copiando herramientas a carpeta deploy..."
-    cp -r toolsmac deploy/VideoDownloader.app/Contents/MacOS/
+    cp -r toolsmac "deploy/${APP_NAME}.app/Contents/MacOS/"
     echo "Herramientas copiadas exitosamente."
 else
     echo "Carpeta toolsmac no encontrada o vacía."
 fi
 
 # Hacer ejecutable el script
-chmod +x deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader
+chmod +x "deploy/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
 
 # Firma ad-hoc del bundle YA armado: la firma cubre el contenido, asi que va al final. No
 # es notarizacion ni confianza de Gatekeeper (sigue haciendo falta el `xattr -cr`): sirve
 # para poder verificar con `codesign --verify` que el bundle llego entero.
 echo "Firmando el bundle (ad-hoc)..."
-codesign --force --deep --sign - deploy/VideoDownloader.app
+codesign --force --deep --sign - "deploy/${APP_NAME}.app"
 
 if [ "$CREATE_ZIP" = "true" ]; then
-    ZIP_NAME="VideoDownloader_Mac_v${APP_VERSION}.zip"
+    ZIP_NAME="${ARTIFACT_NAME}_Mac_v${APP_VERSION}.zip"
     # ditto y NO zip: `zip -r` RESUELVE los symlinks en vez de guardarlos, y un .app de Qt
     # esta lleno (Versions/Current, el binario de cada framework). Con zip el bundle llega
     # al usuario mucho mas pesado, con cada framework duplicado, y la firma invalida.
     rm -f "deploy/${ZIP_NAME}"
-    (cd deploy && ditto -c -k --sequesterRsrc --keepParent "VideoDownloader.app" "${ZIP_NAME}")
+    (cd deploy && ditto -c -k --sequesterRsrc --keepParent "${APP_NAME}.app" "${ZIP_NAME}")
     echo "ZIP creado: deploy/${ZIP_NAME}"
 fi
 
 # El DMG es el artefacto de PRIMERA INSTALACION; el ZIP de arriba es el de actualizacion y
 # los dos no son intercambiables. Ver ../LGA_Base_QT_C_Py/docs/Doc_Deploy_macOS.md.
 if [ "$CREATE_DMG" = "true" ]; then
-    rm -f "deploy/VideoDownloader_Mac_v${APP_VERSION}.dmg"
+    rm -f "deploy/${ARTIFACT_NAME}_Mac_v${APP_VERSION}.dmg"
     bash ./create_dmg.sh --no-open
 fi
 
 echo
-echo "Implementación completada. La aplicación portable está en la carpeta 'deploy/VideoDownloader.app'."
+echo "Implementación completada. La aplicación portable está en la carpeta '"deploy/${APP_NAME}.app"'."
 echo
 
 if [ "$NO_RUN" = "true" ]; then
@@ -218,5 +224,5 @@ else
     # Sin QT_QPA_PLATFORM_PLUGIN_PATH: el bundle trae sus propios plugins. Si hiciera falta
     # apuntar a los de Homebrew, es que el bundle NO quedo autocontenido.
     echo "Ejecutando VideoDownloader..."
-    ./deploy/VideoDownloader.app/Contents/MacOS/VideoDownloader
+    "./deploy/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
 fi

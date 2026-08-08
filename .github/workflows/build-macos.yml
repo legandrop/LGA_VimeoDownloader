@@ -59,23 +59,23 @@ jobs:
     - name: Crear bundle con dependencias
       run: |
         cd build
-        macdeployqt VideoDownloader.app
+        macdeployqt LGA Video Downloader.app
         
     - name: Copiar herramientas macOS
       run: |
         if [ -d "toolsmac" ]; then
-          cp -r toolsmac build/VideoDownloader.app/Contents/MacOS/
+          cp -r toolsmac build/LGA Video Downloader.app/Contents/MacOS/
         fi
         
     - name: Verificar arquitecturas
       run: |
         echo "Verificando arquitecturas del binario:"
-        lipo -info build/VideoDownloader.app/Contents/MacOS/VideoDownloader
+        lipo -info build/LGA Video Downloader.app/Contents/MacOS/LGA Video Downloader
         
     - name: Crear archivo comprimido
       run: |
         cd build
-        tar -czf VideoDownloader-${{ matrix.os }}.tar.gz VideoDownloader.app
+        tar -czf VideoDownloader-${{ matrix.os }}.tar.gz LGA Video Downloader.app
         
     - name: Subir artefactos
       uses: actions/upload-artifact@v4

@@ -24,21 +24,28 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # ---- Lo unico que cambia al derivar una app -------------------------------------------
-# APP_NAME es el nombre del EJECUTABLE y define el nombre de archivo del artefacto
-# (<APP_NAME>_Mac_v<version>.dmg). No lleva prefijo: el updater busca el asset con ese patron.
+# Son TRES nombres y no uno solo, porque tienen consumidores distintos:
 #
-# DISPLAY_NAME es el nombre VISIBLE y por convencion LGA empieza SIEMPRE con "LGA". Aparece
-# en el nombre del volumen que monta el DMG y en el titulo dibujado en el fondo, y los dos
-# tienen que decir lo mismo. Ver docs/Doc_Deploy_macOS.md.
-APP_NAME="VideoDownloader"          # nombre del ejecutable/bundle
-DISPLAY_NAME="LGA Video Downloader"      # nombre visible — SIEMPRE arranca con "LGA"
+#   APP_NAME       el .app tal cual queda en /Applications, y el ejecutable adentro. Es lo
+#                  que ve el usuario en Finder, asi que por convencion LGA arranca con "LGA".
+#                  Puede llevar espacios.
+#   ARTIFACT_NAME  base del nombre de ARCHIVO del .zip y el .dmg. Sin espacios: viaja por URL
+#                  en los releases de GitHub, y un espacio se convierte en %20. Lo consume el
+#                  updater, que busca el asset por patron.
+#   DISPLAY_NAME   nombre del volumen que monta el DMG y titulo dibujado en el fondo. Los dos
+#                  tienen que decir lo mismo.
+#
+# Ver docs/Doc_Deploy_macOS.md.
+APP_NAME="LGA Video Downloader"          # .app y ejecutable — SIEMPRE arranca con "LGA"
+ARTIFACT_NAME="LGA_Video_Downloader"     # base del .zip/.dmg — sin espacios
+DISPLAY_NAME="LGA Video Downloader"      # nombre visible del volumen y del titulo
 # ---------------------------------------------------------------------------------------
 
 show_help() {
     echo "Uso: $0 [--no-open]"
     echo ""
-    echo "Crea deploy/${APP_NAME}_Mac_v<version>.dmg para una instalacion nueva."
-    echo "La actualizacion in-place usa ${APP_NAME}_Mac_v<version>.zip (lo arma deploy.sh --zip)."
+    echo "Crea deploy/${ARTIFACT_NAME}_Mac_v<version>.dmg para una instalacion nueva."
+    echo "La actualizacion in-place usa ${ARTIFACT_NAME}_Mac_v<version>.zip (lo arma deploy.sh --zip)."
     echo ""
     echo "  --no-open   No revelar el DMG en Finder al terminar"
 }
@@ -87,7 +94,7 @@ if ! [[ "$APP_VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
     exit 1
 fi
 
-DMG_NAME="${APP_NAME}_Mac_v${APP_VERSION}.dmg"
+DMG_NAME="${ARTIFACT_NAME}_Mac_v${APP_VERSION}.dmg"
 VOL_NAME="${DISPLAY_NAME} ${APP_VERSION}"
 SRC_APP="deploy/${APP_NAME}.app"
 DMG_PATH="deploy/${DMG_NAME}"
@@ -105,11 +112,11 @@ DMG_PATH="deploy/${DMG_NAME}"
 #
 # Las dos columnas se definen como CX -/+ COL_DX para que la flecha del fondo, que va
 # centrada en CX, quede con el mismo aire contra cada icono por construccion.
-WIN_W=920
+WIN_W=620
 WIN_H=420          # area de contenido
 CHROME_H=58        # barra de titulo + barra de estado
 CX=$((WIN_W / 2))
-COL_DX=130
+COL_DX=125
 ICON_SIZE=96
 TEXT_SIZE=13
 APP_X=$((CX - COL_DX)); APP_Y=132
@@ -134,7 +141,8 @@ fi
 if [[ ! -f "$BACKGROUND_SRC" ]]; then
     echo "ERROR: falta $BACKGROUND_SRC."
     echo "Generalo con:"
-    echo "  osascript -l JavaScript tools/macos/make_dmg_background.js \"$BACKGROUND_SRC\" \"$DISPLAY_NAME\""
+    echo "  osascript -l JavaScript tools/macos/make_dmg_background.js \\"
+    echo "      \"$BACKGROUND_SRC\" \"$DISPLAY_NAME\" \"Drag to install into your Applications folder\" \"$APP_NAME\""
     exit 1
 fi
 
@@ -154,7 +162,7 @@ if [[ ! -d "$VENDOR_DIR/dmgbuild" ]]; then
 fi
 # --------------------------------------------------------------------------------------
 
-WORK_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/${APP_NAME}_DMG_XXXXXX")"
+WORK_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/${ARTIFACT_NAME}_DMG_XXXXXX")"
 MOUNT_DIR=""
 cleanup() {
     if [[ -n "$MOUNT_DIR" ]] && mount | grep -Fq "$MOUNT_DIR"; then
@@ -174,7 +182,7 @@ Instalacion:
 
 Si se muestra un aviso que impide abrir la app, hay que abrir la app "Terminal" y ejecutar:
 
-sudo xattr -cr /Applications/${APP_NAME}.app
+sudo xattr -cr "/Applications/${APP_NAME}.app"
 
 Luego abrir la app otra vez desde Applications.
 

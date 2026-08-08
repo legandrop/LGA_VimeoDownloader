@@ -70,7 +70,9 @@ Lo que mas cuesta si no se lee:
 
 - `./deploy.sh --zip --dmg` produce los dos artefactos: el `.zip` (actualizacion in-place) y el `.dmg` (primera instalacion). No son intercambiables.
 - **Fuente de verdad: `../LGA_Base_QT_C_Py/docs/Doc_Deploy_macOS.md`** — bundle autocontenido, firma ad-hoc antes de empaquetar, el `.zip` con `ditto` y nunca con `zip`, y las restricciones de Finder que definen el DMG dark.
-- El nombre de ARCHIVO va con el del ejecutable y sin prefijo (`VideoDownloader_Mac_v<version>.dmg`), porque es el patron que busca el updater. El nombre VISIBLE empieza siempre con `LGA` (`LGA Video Downloader`): sale de `DISPLAY_NAME` en `create_dmg.sh` y es el mismo string que se le pasa al generador del fondo.
+- Son TRES nombres y no hay que confundirlos: el `.app` y el ejecutable se llaman **`LGA Video Downloader`** (con espacios — es lo que ve el usuario en `/Applications`, donde Finder ordena por el nombre de ARCHIVO del bundle y no por `CFBundleName`); los artefactos `.zip`/`.dmg` se llaman **`LGA_Video_Downloader_Mac_v<version>`** (SIN espacios, porque viajan por URL en los releases y un espacio se vuelve `%20`); y `DISPLAY_NAME` —volumen del DMG y titulo del fondo— dice lo mismo que el `.app`. Las tres salen de constantes arriba de `create_dmg.sh`.
+- El rename va SOLO en el bloque `if(APPLE)` del CMakeLists: en Windows el ejecutable y el instalador siguen siendo `VideoDownloader`.
+- **Esta app NO tiene auto-updater**, asi que cambiar el nombre de los artefactos no rompe ninguna actualizacion.
 - **No hay que instalar nada**: `dmgbuild` va vendorizado en `tools/macos/vendor/` (Python puro, corre con el `python3` del sistema) y el fondo lo genera `tools/macos/make_dmg_background.js` con AppKit via JXA. El `.tiff` esta versionado en `resources/dmg/`; regenerarlo solo hace falta si cambia el diseno o el nombre.
 
 ## Commits

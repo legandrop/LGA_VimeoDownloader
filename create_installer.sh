@@ -8,17 +8,17 @@ rm -rf "$INSTALLER_DIR"
 mkdir -p "$INSTALLER_DIR"
 
 # Copiar la aplicación (usando rsync para evitar problemas de metadatos)
-if [ -d "deploy/VideoDownloader.app" ]; then
+if [ -d "deploy/LGA Video Downloader.app" ]; then
     echo "📋 Copiando aplicación (esto puede tardar un momento)..."
-    rsync -a --exclude='*.dSYM' deploy/VideoDownloader.app "$INSTALLER_DIR/"
+    rsync -a --exclude='*.dSYM' deploy/LGA Video Downloader.app "$INSTALLER_DIR/"
     echo "✅ Aplicación copiada al instalador"
     
     # Verificar tamaños
-    ORIGINAL_SIZE=$(du -sh deploy/VideoDownloader.app | cut -f1)
-    COPIED_SIZE=$(du -sh "$INSTALLER_DIR/VideoDownloader.app" | cut -f1)
+    ORIGINAL_SIZE=$(du -sh deploy/LGA Video Downloader.app | cut -f1)
+    COPIED_SIZE=$(du -sh "$INSTALLER_DIR/LGA Video Downloader.app" | cut -f1)
     echo "📊 Tamaño original: $ORIGINAL_SIZE, Tamaño copiado: $COPIED_SIZE"
 else
-    echo "❌ No se encontró deploy/VideoDownloader.app"
+    echo "❌ No se encontró deploy/LGA Video Downloader.app"
     echo "   Ejecuta primero ./deploy.sh"
     exit 1
 fi
@@ -35,16 +35,16 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Remover atributos de cuarentena
 echo "🧹 Configurando permisos de seguridad..."
-xattr -cr "$DIR/VideoDownloader.app"
+xattr -cr "$DIR/LGA Video Downloader.app"
 
 if [ $? -eq 0 ]; then
     echo "✅ Configuración completada"
     echo ""
     echo "📱 Abriendo VideoDownloader..."
-    open "$DIR/VideoDownloader.app"
+    open "$DIR/LGA Video Downloader.app"
     echo ""
     echo "✨ ¡Instalación completada!"
-    echo "   Puedes mover VideoDownloader.app a tu carpeta Aplicaciones"
+    echo "   Puedes mover LGA Video Downloader.app a tu carpeta Aplicaciones"
     echo ""
     echo "Presiona cualquier tecla para cerrar..."
     read -n 1

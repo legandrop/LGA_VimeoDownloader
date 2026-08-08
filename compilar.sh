@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# El .app y el ejecutable se llaman "LGA Video Downloader" (convencion LGA: el nombre visible
+# arranca con "LGA" para que todas las apps queden juntas en /Applications). El nombre de
+# ARCHIVO de los artefactos es otro y va sin espacios, porque viaja por URL en los releases.
+APP_NAME="LGA Video Downloader"
+ARTIFACT_NAME="LGA_Video_Downloader"
+
 show_help() {
     echo "Uso: $0 [--no-run] [--wait]"
     echo ""
@@ -33,7 +39,7 @@ echo "Compilando VideoDownloader..."
 # workspace `LGA_VideoDownloader` y provoca que VSCode los relance varias
 # veces al arrancar el script). Apuntar al path completo del ejecutable
 # dentro del .app.
-pkill -f "VideoDownloader.app/Contents/MacOS/VideoDownloader" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
+pkill -f "${APP_NAME}.app/Contents/MacOS/${APP_NAME}" 2>/dev/null && echo "   - VideoDownloader terminado" || echo "   - VideoDownloader no estaba en ejecución"
 sleep 1
 
 # Crear directorio de compilación si no existe
@@ -71,7 +77,7 @@ if [ -d "$QT_PATH" ]; then
     export PATH="$QT_PATH/bin:$PATH"
     export DYLD_LIBRARY_PATH="$QT_PATH/lib:$DYLD_LIBRARY_PATH"
     # Nota: macdeployqt tiene problemas con Homebrew Qt, pero la app funciona sin él
-    # "$QT_PATH/bin/macdeployqt" build/VideoDownloader.app -libpath="$QT_PATH/lib"
+    # "$QT_PATH/bin/macdeployqt" "build/${APP_NAME}.app" -libpath="$QT_PATH/lib"
     echo "Dependencias de Qt disponibles en el sistema (Homebrew)."
 else
     echo "Advertencia: Qt no encontrado en $QT_PATH. La aplicación puede no ejecutarse correctamente."
@@ -82,7 +88,7 @@ echo ""
 echo "Preparando carpeta toolsmac..."
 if [ -d "toolsmac" ]; then
     echo "Copiando herramientas desde carpeta toolsmac del proyecto..."
-    cp -r toolsmac build/VideoDownloader.app/Contents/MacOS/
+    cp -r toolsmac "build/${APP_NAME}.app/Contents/MacOS/"
     echo "Herramientas copiadas exitosamente."
 else
     echo "Carpeta toolsmac del proyecto no encontrada o vacía."
@@ -92,9 +98,9 @@ fi
 # seguir mostrando el icono viejo por cache (iconservices). touch + lsregister -f fuerzan
 # a re-leer el icono. Si el cache de Tahoe sigue pegajoso, cerrar sesion y volver a entrar.
 LSREG="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
-if [ -d "build/VideoDownloader.app" ]; then
-    touch "build/VideoDownloader.app"
-    [ -x "$LSREG" ] && "$LSREG" -f "build/VideoDownloader.app" >/dev/null 2>&1 || true
+if [ -d "build/${APP_NAME}.app" ]; then
+    touch "build/${APP_NAME}.app"
+    [ -x "$LSREG" ] && "$LSREG" -f "build/${APP_NAME}.app" >/dev/null 2>&1 || true
 fi
 
 echo ""
@@ -109,7 +115,7 @@ fi
 # Ejecutar la aplicación desde el bundle.
 # CONVENCION LGA — por defecto en BACKGROUND (ver comentario de WAIT_FOR_APP arriba).
 export QT_QPA_PLATFORM_PLUGIN_PATH="/opt/homebrew/share/qt/plugins/platforms"
-APP_BIN="./build/VideoDownloader.app/Contents/MacOS/VideoDownloader"
+APP_BIN="./build/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
 if [ "$WAIT_FOR_APP" = "true" ]; then
     "$APP_BIN"
 else
