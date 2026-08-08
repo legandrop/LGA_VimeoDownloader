@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
+<!-- OJO: deploy.sh REESCRIBE este archivo entero al deployar, con su propio heredoc. Son
+     dos copias de la misma informacion y hay que mantener las dos sincronizadas; ver el
+     comentario en deploy.sh. La version NO se escribe a mano en ninguna de las dos: sale de
+     PROJECT_VERSION via las propiedades MACOSX_BUNDLE_*. -->
 <dict>
     <key>CFBundleExecutable</key>
     <string>VideoDownloader</string>

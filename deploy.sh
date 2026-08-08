@@ -93,6 +93,17 @@ if [ -f "resources/icons/LGA_VideoDownloader.icns" ]; then
 fi
 
 # Crear Info.plist con configuración mejorada de compatibilidad
+#
+# DEUDA CONOCIDA: esto PISA el Info.plist que ya genero CMake desde cmake/Info.plist.in, asi
+# que hay DOS copias de la misma informacion y hay que mantener las dos. Es exactamente lo
+# que causo el bug del versionado: se arreglo `CFBundleShortVersionString` en una copia y
+# `CFBundleVersion` quedo en 0.86 en la otra, y el bundle publicado salio con las dos claves
+# discrepando durante tres versiones.
+#
+# Existe porque este heredoc agrega claves de compatibilidad que el template no trae
+# (LSMinimumSystemVersion, LSArchitecturePriority, NSAppTransportSecurity,
+# NSSupportsAutomaticGraphicsSwitching). Lo correcto es moverlas al template y que el deploy
+# NO toque el plist. Al tocar cualquier clave de aca, revisar cmake/Info.plist.in tambien.
 cat > deploy/VideoDownloader.app/Contents/Info.plist << EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
