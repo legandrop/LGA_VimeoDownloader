@@ -19,3 +19,7 @@ VideoDownloader_installer.iss
 !.cursor/rules/
 .cursor/rules/*
 !.cursor/rules/instructions.mdc
+
+# Python (los scripts de tools/)
+__pycache__/
+*.pyc

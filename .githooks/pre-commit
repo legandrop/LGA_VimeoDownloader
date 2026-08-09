@@ -5,12 +5,38 @@
 # Instalado por `tools/sync_rules.py --install-hook` (via core.hooksPath).
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 [ -f "$SCRIPT_DIR/tools/sync_rules.py" ] || exit 0
-if command -v python3 >/dev/null 2>&1; then
-    PY=python3
-elif command -v py >/dev/null 2>&1; then
-    PY="py -3"
-else
-    PY=python
+# Orden de busqueda del interprete: primero el runtime embebido del repo, si lo
+# tiene; despues el de LGA_FileManagerS3, que es el que prestan los repos que no
+# traen uno propio; recien al final los del sistema.
+#
+# Y cada candidato se PRUEBA corriendolo. No alcanza con `command -v`: en
+# Windows, `python` y `python3` existen en el PATH como alias del Microsoft
+# Store, imprimen "Python was not found" y salen con error.
+PY=""
+for c in "$SCRIPT_DIR/python_runtime/windows/python.exe" \
+         "$SCRIPT_DIR/python_runtime/macos/python3/python3" \
+         "$SCRIPT_DIR/../LGA_FileManagerS3/python_runtime/windows/python.exe" \
+         "$SCRIPT_DIR/../LGA_FileManagerS3/python_runtime/macos/python3/python3"; do
+    # El binario de macOS es el symlink `python3` que cuelga de
+    # python_runtime/macos/python3/, que es la ruta que usa AppPathManager. NO es
+    # bin/python3: eso apunta adentro de un `bin/` que el .gitignore de
+    # FileManagerS3 ignora, asi que en un clon nuevo no existe.
+    #
+    # -f ademas de -x porque en un directorio -x significa "se puede entrar" y da
+    # true, y el padre `python3` ES un directorio.
+    [ -f "$c" ] && [ -x "$c" ] || continue
+    if "$c" -c "pass" >/dev/null 2>&1; then PY="$c"; break; fi
+done
+if [ -z "$PY" ]; then
+    for c in "py -3" python3 python; do
+        if $c -c "pass" >/dev/null 2>&1; then PY="$c"; break; fi
+    done
+fi
+if [ -z "$PY" ]; then
+    # Sin Python no se puede verificar, pero un hook que bloquea el commit por
+    # una dependencia faltante es peor que no tener hook. Avisa y deja pasar.
+    echo "[sync_rules] AVISO: no encontre Python; no se verificaron los espejos."
+    exit 0
 fi
 $PY "$SCRIPT_DIR/tools/sync_rules.py" --check --quiet-ok || {
     echo ""
