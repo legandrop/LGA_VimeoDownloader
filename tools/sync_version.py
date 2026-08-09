@@ -44,8 +44,27 @@ def cmake_version() -> str:
     return match.group(1)
 
 
+# `--check` es alias de `--check-only`. Existen los dos porque el resto de los
+# repos LGA usa `--check` y este usaba solo `--check-only`: el mismo comando
+# tiene que hacer lo mismo en todos.
+FLAGS_CHECK = ("--check-only", "--check")
+
+
 def main() -> int:
-    check_only = "--check-only" in sys.argv[1:]
+    args = sys.argv[1:]
+
+    # Un flag desconocido tiene que CORTAR, no caer en la rama que escribe. Como
+    # el parseo es a mano, `--check` (o cualquier tipeo) se ignoraba en silencio
+    # y el script reescribia VERSION igual. Ya paso: una auditoria corrio
+    # `--check` esperando algo de solo lectura y le toco el archivo.
+    desconocidos = [a for a in args if a not in FLAGS_CHECK]
+    if desconocidos:
+        print("[sync_version] ERROR: flag no reconocido: %s" % " ".join(desconocidos),
+              file=sys.stderr)
+        print("[sync_version] Uso: ./sync_version.sh [--check|--check-only]", file=sys.stderr)
+        return 2
+
+    check_only = bool(args)
     resolved = cmake_version()
     current = VERSION_FILE.read_text(encoding="utf-8").strip() if VERSION_FILE.exists() else None
 
