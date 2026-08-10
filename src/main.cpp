@@ -1,5 +1,6 @@
 #include "videodownloader/mainwindow.h"
 #include "videodownloader/colorutils.h"
+#include "videodownloader/LgaRegistry.h"
 
 #include <QApplication>
 #include <QFile>
@@ -112,6 +113,15 @@ int main(int argc, char *argv[])
 
     // Debe correr ANTES de que MainWindow construya su QSettings.
     migrateLegacyAppDataDir();
+
+    // Auto-registro en el registro compartido de LGA, para que las otras apps sepan donde esta
+    // instalada esta y en que version. Va DESPUES de la migracion para no tocar AppData antes de
+    // que se mueva la carpeta vieja, y despues de setApplicationName porque el registro se
+    // resuelve subiendo desde AppDataLocation y los dos tienen que coincidir. Desde el arbol de
+    // build no escribe nada a proposito, para no pisar a la copia instalada: ver
+    // ../LGA_Base_QT_C_Py/docs/Doc_Registro_LGA.md.
+    LgaRegistry::registerThisApp(QStringLiteral("VideoDownloader"),
+                                 QStringLiteral(VIDEODOWNLOADER_VERSION));
 
     // Cargar fuentes Inter si están disponibles
     QDir fontsDir(":/fonts");

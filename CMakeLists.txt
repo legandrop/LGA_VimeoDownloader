@@ -84,6 +84,7 @@ set(SOURCES
     src/core/downloadqueue.cpp
     src/utils/colorutils.cpp
     src/utils/toolsmanager.cpp
+    src/utils/LgaRegistry.cpp
 )
 
 # Archivos de cabecera
@@ -93,6 +94,7 @@ set(HEADERS
     include/videodownloader/downloader.h
     include/videodownloader/colorutils.h
     include/videodownloader/toolsmanager.h
+    include/videodownloader/LgaRegistry.h
     include/videodownloader/downloadqueue.h
     include/videodownloader/downloaditem.h
 )
@@ -128,6 +130,15 @@ endif()
 # Version al C++: fuente unica de verdad en el project() de arriba.
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     VIDEODOWNLOADER_VERSION="${PROJECT_VERSION}"
+    # Arboles de DESARROLLO de este proyecto (build y repo). Los usa LgaRegistry para NO
+    # registrarse cuando el binario corre desde ahi: si no, el build pisa en el registro
+    # compartido a la copia instalada, que es la que le sirve a las otras apps LGA. El repo
+    # entra ademas del build porque el `deploy/` es hermano del build y no hijo. Son la
+    # segunda red: LgaRegistry ya descarta por el NOMBRE de la carpeta contenedora
+    # (`build`, `deploy`), y estas rutas agarran lo que el nombre no ve (un `out/`, por
+    # ejemplo). Salen de CMake, asi que valen igual en Windows y macOS.
+    LGA_BUILD_TREE_DIR="${CMAKE_BINARY_DIR}"
+    LGA_SOURCE_TREE_DIR="${CMAKE_SOURCE_DIR}"
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
